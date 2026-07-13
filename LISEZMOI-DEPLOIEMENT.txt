@@ -1,0 +1,32 @@
+FRANCOROUTE PRÉPA — VERSION PWA (installable + hors ligne)
+===========================================================
+
+CONTENU DU DOSSIER (tout doit être à la RACINE du repo GitHub) :
+  index.html            -> l'application complète
+  manifest.webmanifest  -> identité de l'app (nom, icône, couleurs)
+  sw.js                 -> service worker (fonctionnement hors ligne)
+  icon-192.png          -> icône (écran d'accueil)
+  icon-512.png          -> icône (haute résolution)
+
+DÉPLOIEMENT (même méthode que Cap TEF) :
+  1. Nouveau repo GitHub (ou remplacer les fichiers de l'existant)
+  2. Glisser les 5 fichiers À LA RACINE
+  3. Netlify -> Import from GitHub -> déployer (aucun réglage requis)
+  4. Optionnel : domaine prepa.francoroute.com dans Namecheap (CNAME vers Netlify)
+
+INSTALLATION SUR LA TABLETTE (Android / Chrome) :
+  1. Ouvrir l'adresse du site dans Chrome
+  2. Menu (trois points) -> « Ajouter à l'écran d'accueil » / « Installer l'application »
+  3. L'icône FrancoRoute apparaît comme une vraie app, plein écran
+  4. Ouvrir l'app UNE FOIS avec internet -> ensuite elle fonctionne 100 % HORS LIGNE
+     (parfait dans la voiture, aucune donnée mobile requise)
+
+SUR iPad (Safari) : bouton Partager -> « Sur l'écran d'accueil »
+
+MISE À JOUR DE L'APP :
+  Remplacer index.html dans le repo, puis dans sw.js changer
+  'francoroute-prepa-v1' en 'v2' (v3, v4...) pour forcer la mise à jour
+  sur les appareils déjà installés.
+
+NOTE : les scores des élèves sont sauvegardés SUR l'appareil.
+Sur la tablette de démonstration, ils resteront ceux de la tablette.

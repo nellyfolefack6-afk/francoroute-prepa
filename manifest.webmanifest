@@ -1,0 +1,16 @@
+{
+  "name": "FrancoRoute Prépa — Révision BDE en français",
+  "short_name": "FrancoRoute",
+  "description": "Révision en français du cours BDE : 20 modules, test final, lexique bilingue et découverte du véhicule.",
+  "lang": "fr-CA",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#022545",
+  "theme_color": "#022545",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
