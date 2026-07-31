@@ -1,6 +1,8 @@
-/* FrancoRoute Prépa — service worker (hors ligne) */
-const CACHE = 'francoroute-prepa-v1';
-const SHELL = [
+/* FrancoRoute Prépa — service worker : mise en cache de l'app shell pour un
+   accès hors ligne. Incrémenter CACHE_NAME à chaque nouvelle mise en ligne
+   de index.html pour forcer les élèves à recevoir la nouvelle version. */
+const CACHE_NAME = 'francoroute-prepa-v1';
+const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
@@ -8,46 +10,44 @@ const SHELL = [
   './icon-512.png'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
     ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
+/* Réseau d'abord pour index.html (pour recevoir les mises à jour dès que
+   possible), cache d'abord pour le reste (police, icônes) — avec repli sur
+   le cache si l'élève est hors ligne. */
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
 
-  // Polices Google : cache au premier chargement, puis hors ligne
-  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-    e.respondWith(
-      caches.match(e.request).then(hit => hit ||
-        fetch(e.request).then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
+  const isAppShell = event.request.mode === 'navigate' ||
+    event.request.url.endsWith('/index.html');
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, res.clone()));
           return res;
-        }).catch(() => hit)
-      )
+        })
+        .catch(() => caches.match('./index.html'))
     );
     return;
   }
 
-  // App shell : cache d'abord, réseau en secours (mise à jour en arrière-plan)
-  if (e.request.mode === 'navigate' || SHELL.some(p => url.pathname.endsWith(p.replace('./','/')))) {
-    e.respondWith(
-      caches.match(e.request, {ignoreSearch:true}).then(hit => {
-        const net = fetch(e.request).then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-          return res;
-        }).catch(() => hit);
-        return hit || net;
-      })
-    );
-  }
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
+  );
 });
