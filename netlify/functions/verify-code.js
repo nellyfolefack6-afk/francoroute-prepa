@@ -29,7 +29,9 @@ exports.handler = async (event) => {
 
   const scriptUrl = process.env.APPS_SCRIPT_URL;
   const secret = process.env.APPS_SCRIPT_SECRET;
+  console.log('DIAG code=', code, 'deviceId=', deviceId, 'scriptUrl set=', !!scriptUrl, 'secret set=', !!secret);
   if (!scriptUrl || !secret) {
+    console.log('DIAG missing env vars');
     // Configuration manquante côté Netlify — ne jamais révéler pourquoi au client.
     return { statusCode: 200, body: JSON.stringify({ ok: false, reason: 'bad_request' }) };
   }
@@ -41,10 +43,16 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, deviceId, secret })
     });
-    sheetData = await res.json();
+    const rawText = await res.text();
+    console.log('DIAG apps script http status=', res.status, 'raw body=', rawText);
+    try { sheetData = JSON.parse(rawText); }
+    catch (parseErr) { console.log('DIAG JSON parse failed:', String(parseErr)); return { statusCode: 200, body: JSON.stringify({ ok: false, reason: 'network' }) }; }
   } catch (e) {
+    console.log('DIAG fetch threw:', String(e));
     return { statusCode: 200, body: JSON.stringify({ ok: false, reason: 'network' }) };
   }
+
+  console.log('DIAG sheetData=', JSON.stringify(sheetData));
 
   switch (sheetData.status) {
     case 'valide':
