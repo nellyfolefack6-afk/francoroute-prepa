@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FrancoRoute Prépa — Révision en français du cours BDE</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#022545">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FrancoRoute">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nuit:#101B2D; --route:#18263E; --carte:#1F3050;
+  --phare:#F5B301; --phare-fonce:#C89100;
+  --blanc:#F7F8FA; --gris:#9AA7BC; --ligne:#2C3E5E;
+  --vert:#2BB673; --rouge:#E05555;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--nuit);color:var(--blanc);min-height:100vh;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp{font-family:'Archivo',sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+/* ---- Route progress (signature) ---- */
+.road{height:14px;background:#0B1422;border-radius:7px;position:relative;overflow:hidden;margin:14px 0 4px}
+.road::after{content:"";position:absolute;top:50%;left:0;right:0;height:2px;transform:translateY(-50%);
+ background:repeating-linear-gradient(90deg,var(--phare) 0 14px,transparent 14px 28px);opacity:.55}
+.road .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--phare-fonce),var(--phare));transition:width .4s ease;border-radius:7px}
+.road .car{position:absolute;top:50%;transform:translate(-50%,-52%);font-size:15px;transition:left .4s ease;left:0%}
+/* ---- Header ---- */
+header{padding:26px 0 8px;text-align:center}
+.logo{display:inline-flex;align-items:center;gap:10px;font-family:'Archivo';font-weight:900;font-size:1.35rem;letter-spacing:.5px}
+.logo .beam{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFE38A,var(--phare) 60%,var(--phare-fonce));box-shadow:0 0 22px rgba(245,179,1,.55);display:grid;place-items:center;font-size:17px}
+.tag{color:var(--gris);font-size:.85rem;margin-top:6px}
+/* ---- Cards / buttons ---- */
+.card{background:var(--route);border:1px solid var(--ligne);border-radius:16px;padding:20px;margin-top:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 .95rem 'Inter';color:var(--nuit);
+ background:var(--phare);border:none;border-radius:12px;padding:13px 22px;cursor:pointer;transition:transform .12s,box-shadow .12s;width:100%}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(245,179,1,.35)}
+.btn.ghost{background:transparent;color:var(--phare);border:1.5px solid var(--phare)}
+.btn.small{width:auto;padding:9px 16px;font-size:.85rem}
+input[type=text]{width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--ligne);background:#0C1524;color:var(--blanc);font:500 1rem 'Inter';letter-spacing:1px;text-align:center;text-transform:uppercase}
+input:focus{outline:2px solid var(--phare)}
+.err{color:var(--rouge);font-size:.85rem;margin-top:8px;text-align:center;display:none}
+/* ---- Home grid ---- */
+.stats{display:flex;gap:10px;margin-top:14px}
+.stat{flex:1;background:var(--carte);border-radius:12px;padding:12px;text-align:center;border:1px solid var(--ligne)}
+.stat b{display:block;font-family:'Archivo';font-size:1.3rem;color:var(--phare)}
+.stat span{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:.5px}
+.modgrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+.mod{display:flex;align-items:center;gap:14px;background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;color:var(--blanc);transition:border-color .15s,transform .12s;width:100%}
+.mod:hover{border-color:var(--phare);transform:translateX(3px)}
+.mod .num{min-width:44px;height:44px;border-radius:10px;background:#0C1524;border:1.5px solid var(--ligne);display:grid;place-items:center;font-family:'Archivo';font-weight:800;color:var(--phare);font-size:.95rem}
+.mod.done .num{background:var(--vert);border-color:var(--vert);color:#fff}
+.mod h3{font-size:.95rem;font-weight:700}
+.mod p{font-size:.78rem;color:var(--gris);margin-top:2px}
+.mod .score{margin-left:auto;font-family:'Archivo';font-weight:800;font-size:.85rem;color:var(--vert);white-space:nowrap}
+.section-label{font-family:'Archivo';font-weight:800;font-size:.8rem;letter-spacing:2px;text-transform:uppercase;color:var(--phare);margin:26px 0 4px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:"";flex:1;height:1px;background:var(--ligne)}
+/* ---- Quiz ---- */
+.qmeta{display:flex;justify-content:space-between;font-size:.8rem;color:var(--gris);margin-bottom:4px}
+.question{font-size:1.08rem;font-weight:600;line-height:1.5;margin:14px 0 18px}
+.opts{display:grid;gap:10px}
+.opt{background:var(--carte);border:1.5px solid var(--ligne);border-radius:12px;padding:14px 16px;cursor:pointer;text-align:left;color:var(--blanc);font:500 .95rem 'Inter';line-height:1.4;transition:border-color .15s;width:100%}
+.opt:hover{border-color:var(--phare)}
+.opt.correct{border-color:var(--vert);background:rgba(43,182,115,.14)}
+.opt.wrong{border-color:var(--rouge);background:rgba(224,85,85,.12)}
+.opt:disabled{cursor:default}
+.feedback{margin-top:16px;border-radius:12px;padding:14px 16px;font-size:.9rem;line-height:1.55;display:none}
+.feedback.ok{background:rgba(43,182,115,.12);border:1px solid var(--vert)}
+.feedback.ko{background:rgba(224,85,85,.1);border:1px solid var(--rouge)}
+.enchip{display:inline-block;margin-top:8px;background:#0C1524;border:1px solid var(--phare);color:var(--phare);border-radius:999px;padding:4px 12px;font-size:.78rem;font-weight:600}
+.navrow{display:flex;gap:10px;margin-top:18px}
+/* ---- Results ---- */
+.bigscore{font-family:'Archivo';font-weight:900;font-size:3.4rem;text-align:center;color:var(--phare);margin:10px 0 0}
+.verdict{text-align:center;color:var(--gris);margin-bottom:16px}
+/* ---- Lexique ---- */
+.lexrow{display:flex;justify-content:space-between;gap:14px;padding:12px 4px;border-bottom:1px solid var(--ligne);font-size:.92rem}
+.lexrow b{color:var(--phare);font-weight:700;min-width:46%}
+.lexrow span{color:var(--blanc)}
+.lexnote{font-size:.78rem;color:var(--gris);display:block;margin-top:2px}
+.back{background:none;border:none;color:var(--gris);font:600 .85rem 'Inter';cursor:pointer;padding:6px 0;display:inline-flex;gap:6px;align-items:center}
+.back:hover{color:var(--phare)}
+/* ---- Module 0 véhicule ---- */
+.vhtabs{display:flex;gap:8px;flex-wrap:wrap}
+.vhtab{background:var(--carte);border:1.5px solid var(--ligne);color:var(--gris);border-radius:999px;padding:7px 14px;font:600 .78rem 'Inter';cursor:pointer}
+.vhtab.active{background:var(--phare);border-color:var(--phare);color:var(--nuit)}
+#vhStage svg{width:100%;height:auto;display:block}
+.part{cursor:pointer;transition:filter .12s}
+.part:hover{filter:brightness(1.35)}
+.part.sel *{stroke:var(--phare)!important;stroke-width:3px!important}
+.part.sel .fillable{fill:rgba(245,179,1,.28)!important}
+.vhinfo{margin-top:12px;background:var(--carte);border:1px solid var(--ligne);border-radius:12px;padding:14px 16px;font-size:.9rem;line-height:1.55;min-height:64px;color:var(--gris)}
+.vhinfo b.fr{color:var(--phare);font-size:1rem}
+.vhinfo .en{display:inline-block;margin-left:8px;background:#0C1524;border:1px solid var(--phare);color:var(--phare);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:600}
+.vhinfo .role{display:block;margin-top:6px;color:var(--blanc)}
+.hidden{display:none!important}
+.notice{font-size:.75rem;color:var(--gris);text-align:center;margin-top:26px;line-height:1.6}
+/* ---- Niveau + Phase 2 ---- */
+.niveau-card .navrow{margin-top:0}
+.btn.small{width:auto;flex:1}
+#btnDebutant.active,#btnExperimente.active{background:var(--phare);color:var(--nuit);border-color:var(--phare)}
+.niveau-banner{margin-top:14px;background:var(--carte);border:1px solid var(--phare);border-radius:12px;padding:12px 14px;font-size:.85rem;line-height:1.5}
+.niveau-banner b{color:var(--phare)}
+.niveau-banner .navrow{margin-top:10px}
+/* ---- Séquences ---- */
+.seqanswer{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;background:#0C1524;border:1.5px dashed var(--ligne);border-radius:12px;padding:10px}
+.seqanswer:empty::after{content:"Touchez un geste ci-dessous pour commencer";color:var(--gris);font-size:.82rem;padding:6px}
+.seqchip{background:var(--carte);border:1.5px solid var(--phare);color:var(--blanc);border-radius:999px;padding:8px 14px;font:600 .85rem 'Inter';display:inline-flex;align-items:center;gap:6px}
+.seqchip .n{background:var(--phare);color:var(--nuit);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800}
+.seqchip.ok{border-color:var(--vert)}.seqchip.ok .n{background:var(--vert)}
+.seqchip.ko{border-color:var(--rouge)}.seqchip.ko .n{background:var(--rouge)}
+.seqbank{display:flex;flex-wrap:wrap;gap:8px}
+.seqbtn{background:var(--carte);border:1.5px solid var(--ligne);color:var(--blanc);border-radius:999px;padding:9px 15px;font:500 .85rem 'Inter';cursor:pointer;transition:border-color .15s}
+.seqbtn:hover{border-color:var(--phare)}
+.seqbtn:disabled{opacity:.35;cursor:default}
+/* ---- Erreurs ---- */
+.errrow{display:flex;gap:12px;padding:13px 4px;border-bottom:1px solid var(--ligne)}
+.errrow .ico{font-size:1.2rem;line-height:1}
+.errrow b{display:block;color:var(--blanc);font-size:.92rem;margin-bottom:3px}
+.errrow span{color:var(--gris);font-size:.82rem;line-height:1.45}
+/* ---- Panneaux routiers ---- */
+.signgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+@media(min-width:560px){.signgrid{grid-template-columns:repeat(3,1fr)}}
+.signcard{background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:14px;text-align:center}
+.signcard svg{width:64px;height:64px;margin-bottom:8px}
+.signcard h4{font-size:.85rem;margin-bottom:2px}
+.signcard .en{font-size:.7rem;color:var(--phare);margin-bottom:6px;display:block}
+.signcard p{font-size:.72rem;color:var(--gris);line-height:1.4}
+/* ---- Scénario visuel dans le quiz ---- */
+.qimg{background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:10px;margin-bottom:10px}
+.qimg svg{width:100%;height:auto;display:block;border-radius:8px}
+/* ---- Progression / badges ---- */
+.catrow{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--ligne)}
+.catrow .cicon{font-size:1.3rem;width:30px;text-align:center}
+.catrow .clabel{flex:1;font-size:.9rem;font-weight:600}
+.catrow .stars{font-size:1rem;letter-spacing:2px;white-space:nowrap}
+.badgegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+@media(min-width:560px){.badgegrid{grid-template-columns:repeat(3,1fr)}}
+.badge{background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:16px 10px;text-align:center;opacity:.35;filter:grayscale(1)}
+.badge.unlocked{opacity:1;filter:none;border-color:var(--phare);box-shadow:0 0 14px rgba(245,179,1,.25)}
+.badge .bicon{font-size:1.8rem;display:block;margin-bottom:6px}
+.badge h4{font-size:.78rem;line-height:1.3}
+@media(min-width:560px){.modgrid{grid-template-columns:1fr 1fr}}
+:focus-visible{outline:2px solid var(--phare);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo"><span class="beam">🗼</span> FRANCOROUTE <span style="color:var(--phare)">PRÉPA</span></div>
+  <div class="tag">Votre phare vers la réussite au volant — Révision en français du cours théorique BDE</div>
+</header>
+
+<!-- ============ LOGIN ============ -->
+<section id="login" class="card">
+  <h2 style="text-align:center;font-size:1.15rem">Accès élève</h2>
+  <p style="text-align:center;color:var(--gris);font-size:.88rem;margin:8px 0 16px">Entrez le code d'accès remis lors de votre inscription à FRANCOROUTE Driving School.</p>
+  <input type="text" id="codeInput" placeholder="CODE D'ACCÈS" autocomplete="off">
+  <p class="err" id="codeErr">Code invalide. Vérifiez votre courriel d'inscription ou contactez l'école.</p>
+  <div style="margin-top:14px"><button class="btn" onclick="tryLogin()">Entrer</button></div>
+</section>
+
+<!-- ============ HOME ============ -->
+<section id="home" class="hidden">
+  <div class="stats">
+    <div class="stat"><b id="stDone">0</b><span>Modules réussis</span></div>
+    <div class="stat"><b id="stAvg">—</b><span>Score moyen</span></div>
+    <div class="stat"><b id="stFinal">—</b><span>Test final</span></div>
+  </div>
+
+  <div class="card niveau-card" style="margin-top:16px">
+    <h3 style="font-size:1rem">Quel est votre niveau ?</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">Pour vous proposer le bon parcours dès l'accueil.</p>
+    <div class="navrow">
+      <button class="btn ghost small" onclick="setNiveau('debutant')" id="btnDebutant">Grand débutant 🌱</button>
+      <button class="btn ghost small" onclick="setNiveau('experimente')" id="btnExperimente">Je sais déjà conduire 🚗</button>
+    </div>
+    <div id="niveauBanner" class="niveau-banner hidden"></div>
+  </div>
+
+  <div class="card" id="progressionCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">📊 Ma progression</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">Votre niveau par thème (⭐) et vos badges débloqués.</p>
+    <button class="btn ghost" onclick="show('progression');renderProgression()">Voir ma progression</button>
+  </div>
+
+  <div class="section-label">Module 0 — Découverte du véhicule</div>
+  <div class="card" style="margin-top:10px">
+    <h3 style="font-size:1rem">Vous n'avez jamais conduit ? Commencez ici.</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">Schémas interactifs : touchez chaque élément de la voiture pour découvrir son nom en français, en anglais, et son rôle. À faire AVANT votre première leçon.</p>
+    <button class="btn" onclick="show('vehicule');vhScene(0)">Explorer la voiture 🚗</button>
+  </div>
+
+  <div class="section-label">Modules de révision</div>
+  <p style="font-size:.82rem;color:var(--gris)">Chaque module reprend en français les notions du cours en ligne (donné en anglais). Les termes anglais essentiels sont indiqués — vous les entendrez en classe et pendant l'examen pratique.</p>
+  <div class="modgrid" id="modGrid"></div>
+
+  <div class="section-label">Test final blanc</div>
+  <div class="card" style="margin-top:10px">
+    <h3 style="font-size:1rem">Simulation du test final (20 questions)</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">Mélange de toutes les notions. Seuil de réussite recommandé : 75 % (15/20).</p>
+    <button class="btn" onclick="startFinal()">Commencer le test final</button>
+  </div>
+
+  <div class="section-label" id="expressLabel">Parcours Express Examen</div>
+  <div class="card" id="expressCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">Vous savez déjà conduire ? Préparez l'examen G2 ou G.</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 12px">Pour ceux qui ont complété leurs 12 mois d'attente, qui conduisaient dans leur pays d'origine, ou qui préparent le G complet. Concentrez-vous sur ce que l'examinateur DriveTest évalue vraiment.</p>
+    <div class="modgrid" id="expressGrid" style="margin-top:0"></div>
+    <div style="margin-top:14px">
+      <button class="btn" onclick="startExpress()">Test Express (20 questions ciblées) <span id="stExpress" style="font-family:'Archivo';font-weight:800"></span></button>
+    </div>
+    <p style="color:var(--gris);font-size:.78rem;margin-top:10px">💡 Consultez aussi le <b style="color:var(--phare)">lexique bilingue</b> ci-dessous : comprendre les consignes anglaises de l'examinateur est la clé n°1 de la réussite.</p>
+  </div>
+
+  <div class="section-label" id="phase2Label">Phase 2 — Préparation pratique</div>
+  <div class="card" id="seqCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">🎯 Séquences de conduite</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">Placez les gestes dans le bon ordre — démarrage, changement de voie, virages, stationnement parallèle, virage à trois points. C'est l'ordre des gestes, pas les connaissances, qui est évalué à l'examen.</p>
+    <button class="btn" onclick="show('sequences');seqHome()">Voir les séquences</button>
+  </div>
+  <div class="card" id="scenarioCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">🖼️ Scénarios visuels</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">« Vous arrivez ici… que faites-vous ? » — des situations illustrées (intersection, autobus scolaire, rond-point...) à analyser comme sur la route.</p>
+    <button class="btn" onclick="startScenarios()">Commencer les scénarios <span id="stScenarios" style="font-family:'Archivo';font-weight:800"></span></button>
+  </div>
+  <div class="card" id="examinerCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">🎓 Simulateur examinateur DriveTest</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px">L'examinateur donne une consigne en anglais — vous choisissez la bonne séquence de gestes à suivre, exactement comme le jour de l'examen.</p>
+    <button class="btn" onclick="startExaminer()">Commencer la simulation <span id="stExaminer" style="font-family:'Archivo';font-weight:800"></span></button>
+  </div>
+  <div class="card" id="errorsCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">⚠️ Erreurs fréquentes à l'examen G2/G</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 12px">Ce qui fait échouer le plus souvent — à connaître avant d'entrer dans la voiture.</p>
+    <div class="navrow">
+      <button class="btn ghost small" onclick="show('errors')">Consulter la liste</button>
+      <button class="btn small" onclick="startErrorsQuiz()">Tester mes connaissances <span id="stErrors" style="font-family:'Archivo';font-weight:800"></span></button>
+    </div>
+  </div>
+  <div class="card" id="signsCard" style="margin-top:10px">
+    <h3 style="font-size:1rem">🚸 Panneaux routiers illustrés</h3>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 12px">Forme et couleur avant tout — reconnaître un panneau d'un coup d'œil, comme à l'examen.</p>
+    <button class="btn ghost" onclick="show('signs')">Voir les panneaux</button>
+  </div>
+
+  <div class="section-label">Lexique bilingue de conduite</div>
+  <div class="card" style="margin-top:10px">
+    <p style="color:var(--gris);font-size:.85rem;margin-bottom:14px">Les consignes que votre instructeur in-car et l'examinateur DriveTest donneront <b style="color:var(--blanc)">en anglais</b> — apprenez-les avant votre première leçon.</p>
+    <button class="btn ghost" onclick="show('lexique')">Ouvrir le lexique</button>
+  </div>
+
+  <p class="notice">Outil de révision complémentaire offert par FRANCOROUTE Driving School / Auto-École · London, ON<br>
+  Ne remplace pas le cours BDE approuvé MTO. Contenu pédagogique basé sur le Guide officiel de l'automobiliste de l'Ontario (MTO).<br>
+  © FRANCOROUTE · francoroute.com</p>
+</section>
+
+
+<!-- ============ QUIZ ============ -->
+<section id="quiz" class="hidden">
+  <button class="back" onclick="confirmExit()">← Retour aux modules</button>
+  <div class="card">
+    <div class="qmeta"><span id="quizTitle"></span><span id="quizCount"></span></div>
+    <div class="road"><div class="fill" id="roadFill"></div><div class="car" id="roadCar">🚗</div></div>
+    <div class="qimg hidden" id="qImg"></div>
+    <div class="question" id="qText"></div>
+    <div class="opts" id="qOpts"></div>
+    <div class="feedback" id="qFb"></div>
+    <div class="navrow">
+      <button class="btn hidden" id="nextBtn" onclick="nextQ()">Question suivante →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section id="results" class="hidden">
+  <div class="card" style="text-align:center">
+    <h2 id="resTitle" style="font-size:1.1rem"></h2>
+    <div class="bigscore" id="resScore"></div>
+    <p class="verdict" id="resVerdict"></p>
+    <div class="road"><div class="fill" id="resFill"></div></div>
+    <button class="btn hidden" id="reviewBtn" style="margin-top:14px" onclick="reviewMissed()">Réviser mes erreurs ✏️</button>
+    <div class="navrow" style="margin-top:14px">
+      <button class="btn ghost" onclick="retryQuiz()">Recommencer</button>
+      <button class="btn" onclick="show('home');refreshHome()">Modules</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 0 : VÉHICULE ============ -->
+<section id="vehicule" class="hidden">
+  <button class="back" onclick="show('home')">← Retour</button>
+  <div class="card">
+    <h2 style="font-size:1.05rem;margin-bottom:4px">Module 0 — Découverte du véhicule</h2>
+    <p style="color:var(--gris);font-size:.82rem;margin-bottom:12px">👆 Touchez un élément du schéma pour l'identifier.</p>
+    <div class="vhtabs" id="vhTabs"></div>
+    <div id="vhStage" style="background:#0C1524;border:1px solid var(--ligne);border-radius:14px;padding:10px;margin-top:12px"></div>
+    <div id="vhInfo" class="vhinfo">Sélectionnez un élément du schéma ☝️</div>
+    <div class="navrow">
+      <button class="btn ghost" id="vhPrev" onclick="vhNav(-1)">← Précédent</button>
+      <button class="btn" id="vhNext" onclick="vhNav(1)">Suivant →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEXIQUE ============ -->
+<section id="lexique" class="hidden">
+  <button class="back" onclick="show('home')">← Retour</button>
+  <div class="card">
+    <h2 style="font-size:1.1rem;margin-bottom:6px">Lexique bilingue — en voiture et à l'examen</h2>
+    <p style="color:var(--gris);font-size:.83rem;margin-bottom:10px">Termes classés du plus fréquent au plus technique.</p>
+    <div id="lexList"></div>
+  </div>
+</section>
+
+<!-- ============ SÉQUENCES : LISTE ============ -->
+<section id="sequences" class="hidden">
+  <button class="back" onclick="show('home');refreshHome()">← Retour</button>
+  <div class="card">
+    <h2 style="font-size:1.1rem;margin-bottom:6px">Séquences de conduite</h2>
+    <p style="color:var(--gris);font-size:.85rem;margin-bottom:14px">Touchez les gestes dans le bon ordre. L'examinateur ne teste pas vos connaissances — il teste vos automatismes.</p>
+    <div class="modgrid" id="seqGrid"></div>
+  </div>
+</section>
+
+<!-- ============ SÉQUENCES : EXERCICE ============ -->
+<section id="seqPlay" class="hidden">
+  <button class="back" onclick="show('sequences')">← Retour aux séquences</button>
+  <div class="card">
+    <h2 style="font-size:1.05rem" id="seqTitle"></h2>
+    <p style="color:var(--gris);font-size:.85rem;margin:6px 0 14px" id="seqContext"></p>
+    <p style="font-size:.78rem;color:var(--phare);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px">Votre séquence</p>
+    <div class="seqanswer" id="seqAnswer"></div>
+    <p style="font-size:.78rem;color:var(--phare);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin:18px 0 6px">Gestes disponibles — touchez dans l'ordre</p>
+    <div class="seqbank" id="seqBank"></div>
+    <div class="feedback" id="seqFb" style="display:none"></div>
+    <div class="navrow">
+      <button class="btn ghost" id="seqUndoBtn" onclick="seqUndo()">← Annuler le dernier</button>
+      <button class="btn" id="seqCheckBtn" onclick="seqCheck()">Vérifier ✓</button>
+    </div>
+    <div class="navrow hidden" id="seqNextRow">
+      <button class="btn ghost" onclick="seqReset()">Recommencer</button>
+      <button class="btn" onclick="seqNext()">Séquence suivante →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ERREURS FRÉQUENTES ============ -->
+<section id="errors" class="hidden">
+  <button class="back" onclick="show('home');refreshHome()">← Retour</button>
+  <div class="card">
+    <h2 style="font-size:1.1rem;margin-bottom:6px">Erreurs fréquentes à l'examen G2/G</h2>
+    <p style="color:var(--gris);font-size:.83rem;margin-bottom:10px">Ce qui coûte le plus souvent des points — ou l'examen au complet.</p>
+    <div id="errList"></div>
+  </div>
+</section>
+
+<!-- ============ PANNEAUX ROUTIERS ============ -->
+<section id="signs" class="hidden">
+  <button class="back" onclick="show('home');refreshHome()">← Retour</button>
+  <div class="card">
+    <h2 style="font-size:1.1rem;margin-bottom:6px">Panneaux routiers illustrés</h2>
+    <p style="color:var(--gris);font-size:.83rem;margin-bottom:10px">Forme et couleur avant tout : c'est ce que l'œil reconnaît en premier sur la route.</p>
+    <div class="signgrid" id="signGrid"></div>
+  </div>
+</section>
+
+<!-- ============ PROGRESSION & BADGES ============ -->
+<section id="progression" class="hidden">
+  <button class="back" onclick="show('home');refreshHome()">← Retour</button>
+  <div class="card">
+    <h2 style="font-size:1.1rem;margin-bottom:6px">Ma progression</h2>
+    <p style="color:var(--gris);font-size:.83rem;margin-bottom:6px">Votre niveau par thème, selon vos meilleurs résultats.</p>
+    <div id="catList"></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:1.1rem;margin-bottom:10px">Badges</h2>
+    <div class="badgegrid" id="badgeGrid"></div>
+  </div>
+</section>
+
+<script>
+/* ================== ACCÈS ==================
+   Les codes ne sont jamais stockés en clair dans le code source : seul leur
+   empreinte SHA-256 est comparée. Un visiteur qui ouvre "Afficher le code
+   source" ne peut donc pas lire ou copier les codes valides. */
+const CODE_HASHES=["9ca1f7b5e5d3183f5bd7cb5cc5f9a31f8a593747af43645c69b44819d375ca49","d16568fec5d50a75226f1ca51d06e704c07556e9df56a598552dc5b74fa40e0f","364f47df3f2dad010027594685d6402504d498d6ad076355decba42ed810afd9","f0ef70f23ce47e6ee0015a23f7a0772a664fa8496761b446a6979a19c33f6c6b","43f6817a86c2738d12589781846365ab284d526d82dfa980cf5c6d22e66e08f9","4af2fccb0e35c15e316b77c38b2944ae683296b4b091832205f0a90b9e60b028","87f2cd45b758fd42701a9b98701cdd96b509478d11b10b95a3e6b38373090c11","8ffa4c4390ff4fb5c5f2f4259da4d4bb68feb6442c4516cda2c2a74b23addf59","2edc40879ac319326eb9d75a4fda736868c1d47a5c6631d504552f2f045108e2"];
+async function sha256Hex(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+/* Stockage sécurisé (mémoire si localStorage indisponible) */
+const mem={};
+const store={
+  get(k){try{return localStorage.getItem(k)??mem[k]??null}catch(e){return mem[k]??null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){} mem[k]=v}
+};
+async function tryLogin(){
+  const v=document.getElementById('codeInput').value.trim().toUpperCase();
+  const h=await sha256Hex(v);
+  if(CODE_HASHES.includes(h)){store.set('fr_code_hash',h);show('home');buildHome();}
+  else document.getElementById('codeErr').style.display='block';
+}
+document.getElementById('codeInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+
+/* ================== DONNÉES ==================
+   Q = {q: question FR, o:[4 options], a: index bonne réponse, en: terme anglais clé, x: explication} */
+const MODULES=[
+{t:"Attitude et responsabilité du conducteur",qs:[
+{q:"Que signifie l'acronyme ASK, présenté au début du cours ?",o:["Attitude, Skill and Knowledge (attitude, habileté et connaissances)","Awareness, Speed and Kindness","Attention, Safety and Keys","Ability, Signals and Karma"],a:0,en:"ASK = Attitude, Skill, Knowledge",x:"Une bonne conduite repose sur trois piliers : l'attitude, l'habileté et les connaissances."},
+{q:"Quel groupe d'âge a le taux de collision le plus élevé ?",o:["25 à 35 ans","16 à 20 ans","45 à 55 ans","65 ans et plus"],a:1,en:"Collision rate",x:"Les conducteurs de 16 à 20 ans ont le taux de collision le plus élevé — d'où l'importance du programme BDE."},
+{q:"Dans quel délai devez-vous compléter le cours BDE complet de 40 heures après l'avoir commencé ?",o:["6 mois","2 ans","1 an","90 jours"],a:2,en:"BDE — Beginner Driver Education",x:"Vous avez 1 an à partir de la date de début pour terminer les 40 heures du cours."},
+{q:"L'état d'esprit du conducteur « ADULTE » est le mieux décrit par quel mot ?",o:["Compétitif","Impulsif","Craintif","Coopératif"],a:3,en:"Co-operative driver",x:"Le conducteur adulte et mature coopère avec les autres usagers de la route au lieu de rivaliser avec eux."},
+{q:"Quelle information n'apparaît PAS sur votre document d'historique de permis de conduire (DLH) ?",o:["Vos infractions routières antérieures","Votre classe de permis","La date de réussite du cours BDE","Votre nom"],a:0,en:"DLH — Driver's Licence History",x:"Le DLH prouve la réussite du BDE (utile pour l'assurance) mais ne liste pas les infractions antérieures."}]},
+{t:"Système de permis et lois G1/G2/G",qs:[
+{q:"Après la réussite du cours BDE, quel est le délai minimal avant qu'un conducteur G1 puisse passer l'examen routier G2 ?",o:["12 mois","8 mois","6 mois","4 mois"],a:1,en:"G2 road test — 8 months",x:"Le BDE réduit l'attente de 12 à 8 mois. C'est l'avantage clé du certificat."},
+{q:"Quel corps policier est responsable de l'application de la loi aux postes frontaliers canadiens ?",o:["La police municipale","La Police provinciale de l'Ontario (OPP)","La Gendarmerie royale du Canada (GRC / RCMP)","Les agents de stationnement"],a:2,en:"RCMP",x:"La GRC (RCMP en anglais) est responsable aux frontières canadiennes."},
+{q:"Un conducteur G2 de 19 ans ou moins, dans les 6 premiers mois de son G2, peut transporter combien de passagers de 19 ans ou moins entre minuit et 5 h ?",o:["3","2","Aucun","1"],a:3,en:"G2 passenger condition",x:"Un seul passager de 19 ans ou moins pendant cette période (sauf exceptions familiales ou conducteur accompagnateur)."},
+{q:"Dépasser la limite de vitesse affichée de 50 km/h ou plus entraîne combien de points d'inaptitude ?",o:["6","3","4","2"],a:0,en:"Demerit points",x:"6 points d'inaptitude — plus une suspension immédiate et une amende très élevée (conduite dangereuse/stunt driving)."},
+{q:"Une suspension administrative de permis (ADLS) de 90 jours prend effet :",o:["Après votre passage en cour","Immédiatement au bord de la route","Dans les 30 jours","À la réception d'une lettre du MTO"],a:1,en:"ADLS — Administrative Driver's Licence Suspension",x:"L'ADLS s'applique immédiatement, sur place, au moment de l'interception."}]},
+{t:"Signalisation routière",qs:[
+{q:"Vous devez vous arrêter complètement à tous les panneaux d'arrêt et feux rouges. La grande ligne blanche au sol s'appelle officiellement :",o:["La ligne de passage","La ligne de sécurité","La ligne d'arrêt (stop line)","La ligne de bordure"],a:2,en:"Stop line",x:"On s'arrête à la stop line, au passage piéton, ou au bord (edge) du trottoir s'il n'y a pas de marquage."},
+{q:"Un feu jaune clignotant signifie que vous devez :",o:["Vous arrêter complètement puis repartir","Conduire avec prudence en approchant et en traversant l'intersection","Accélérer pour dégager l'intersection","Céder le passage à tous les véhicules"],a:1,en:"Flashing yellow — proceed with caution",x:"Jaune clignotant = prudence. Rouge clignotant = arrêt complet obligatoire."},
+{q:"Les couleurs vert et bleu sur les panneaux représentent quel type de signalisation ?",o:["Panneaux d'avertissement","Panneaux de réglementation","Panneaux de construction","Panneaux d'indication / information (guide signs)"],a:3,en:"Guide / information signs",x:"Vert et bleu = information et direction. Jaune = avertissement. Orange = construction."},
+{q:"À une intersection sans panneaux ni feux, si deux véhicules arrivent en même temps, qui a la priorité ?",o:["Le véhicule venant de la droite","Le véhicule venant de la gauche","Le véhicule le plus rapide","Le véhicule le plus gros"],a:0,en:"Right-of-way",x:"Priorité à droite quand on arrive en même temps à une intersection non contrôlée."},
+{q:"Un panneau jaune en losange avec un motif de damier signifie :",o:["Zone scolaire","Fin de la route (road ends)","Traverse d'animaux","Chaussée glissante"],a:1,en:"Road ends",x:"Ce panneau annonce que la route se termine devant vous — préparez-vous à tourner."}]},
+{t:"Contrôle du véhicule",qs:[
+{q:"Dans une voiture à transmission manuelle, quelle pédale sert à changer les vitesses ?",o:["Le frein","L'accélérateur","L'embrayage (clutch)","La pédale de stationnement"],a:2,en:"Clutch",x:"L'embrayage (clutch) permet de passer les vitesses dans une transmission manuelle."},
+{q:"Quelle technique de freinage doit être utilisée dans les situations normales (non urgentes) ?",o:["Le freinage au seuil (threshold braking)","Le freinage brusque","Le freinage par à-coups","Le frein moteur uniquement"],a:0,en:"Threshold braking",x:"Freinage progressif et contrôlé, juste avant le blocage des roues : arrêt rapide mais maîtrisé."},
+{q:"La technique de récupération « glissement contrôlé » (controlled slip) sert à redresser le véhicule après :",o:["Un freinage d'urgence","Une accélération","Un dépassement","Un virage"],a:3,en:"Recovery — controlled slip",x:"On laisse le volant glisser de façon contrôlée entre les mains pour redresser les roues après un virage."},
+{q:"Où est-il le plus sécuritaire de placer ses mains sur le volant ?",o:["10 h et 2 h","9 h et 3 h","12 h","8 h et 4 h uniquement"],a:1,en:"9 and 3 o'clock",x:"Position 9 h – 3 h : meilleur contrôle et sécurité en cas de déploiement du coussin gonflable."},
+{q:"Quel élément ne fait PAS partie du tour d'inspection du véhicule (circle check) ?",o:["Les pneus","Les lumières","Les filtres","Les alentours immédiats du véhicule"],a:2,en:"Circle check",x:"Le circle check est une inspection visuelle rapide (pneus, lumières, dommages, obstacles) — pas la mécanique interne comme les filtres."}]},
+{t:"Observation et balayage visuel",qs:[
+{q:"Quel est le schéma de balayage visuel aux intersections ?",o:["Gauche – centre – droite – gauche","Droite – gauche – droite","Centre – gauche – droite","Gauche – droite seulement"],a:0,en:"Left – centre – right – left",x:"On rebalaie à gauche en dernier car c'est de là que vient le premier danger."},
+{q:"À quelle fréquence un conducteur doit-il vérifier ses rétroviseurs ?",o:["Toutes les 30 secondes","Toutes les 5 à 8 secondes","Une fois par minute","Seulement avant de tourner"],a:1,en:"Mirror check every 5–8 seconds",x:"Vérification des miroirs toutes les 5 à 8 secondes pour garder une image complète de la circulation."},
+{q:"La fixation visuelle se produit quand vous cessez de balayer du regard pendant plus de combien de secondes ?",o:["5","10","2","8"],a:2,en:"Visual fixation — 2 seconds",x:"Fixer un point plus de 2 secondes = danger : vous ne voyez plus ce qui change autour."},
+{q:"Que signifie MSB ?",o:["Move – Stop – Brake","Mirror – Speed – Bumper","Merge – Signal – Back","Mirrors – Signal – Blind spot (miroirs, clignotant, angle mort)"],a:3,en:"MSB — Mirrors, Signal, Blind spot",x:"La séquence obligatoire avant tout changement de voie ou virage. L'examinateur la vérifie à chaque manœuvre !"},
+{q:"Quelle est la bonne technique pour vérifier l'angle mort ?",o:["Regarder uniquement dans le rétroviseur","Tourner le menton vers l'épaule","Tourner tout le corps","Se fier aux capteurs du véhicule"],a:1,en:"Shoulder check — chin toward shoulder",x:"Tourner le menton vers l'épaule (shoulder check) — un regard rapide sans tourner tout le corps."}]},
+{t:"Distances et temps de réaction",qs:[
+{q:"Le temps de réaction moyen d'un conducteur débutant est de :",o:["¾ de seconde","2 secondes","3 secondes","¼ de seconde"],a:0,en:"Reaction time — ¾ second",x:"Environ ¾ de seconde entre la perception d'un danger et le début de la réaction."},
+{q:"Comment détermine-t-on la distance de suivi derrière un véhicule en mouvement ?",o:["En estimant les mètres","En comptant « one-one thousand, two one-thousand, three one-thousand »","En regardant le compteur","En laissant deux longueurs de voiture"],a:1,en:"Following distance — counting seconds",x:"On compte les secondes entre le moment où le véhicule devant passe un repère et le moment où on le passe (minimum 2–3 secondes)."},
+{q:"Face à un véhicule qui vous colle de trop près (tailgater), l'action la PLUS dangereuse est de :",o:["Ralentir progressivement","Changer de voie","Freiner brusquement","Maintenir sa vitesse"],a:2,en:"Tailgater — never slam on the brakes",x:"Freiner brusquement provoque la collision arrière. Ralentissez doucement et laissez-le dépasser."},
+{q:"La loi sur l'« emportiérage » (dooring) exige que les conducteurs laissent un minimum de combien de mètre(s) en dépassant un cycliste ?",o:["2","3","0,5","1"],a:3,en:"Dooring law — 1 metre",x:"Minimum 1 mètre en dépassant un cycliste."},
+{q:"Quelle distance faut-il garder à l'arrêt derrière un véhicule pour avoir un espace de dégagement sécuritaire ?",o:["Voir les pneus du véhicule devant vous","Un mètre","Une demi-longueur de voiture","Toucher presque son pare-chocs"],a:0,en:"Safe stopping gap — see the tires",x:"À l'arrêt, vous devez voir les pneus du véhicule devant toucher la chaussée : assez d'espace pour contourner si nécessaire."}]},
+{t:"Intersections et virages",qs:[
+{q:"En attendant de tourner à gauche, les roues du véhicule doivent être pointées :",o:["Vers la gauche","Droit devant","Vers la droite","Peu importe"],a:1,en:"Left turn — wheels straight ahead",x:"Roues droites : si on vous frappe par l'arrière, vous ne serez pas projeté dans la circulation venant en sens inverse."},
+{q:"Une intersection où des véhicules ou objets bloquent votre vue s'appelle :",o:["Une intersection fermée","Une intersection en T","Une intersection aveugle (blind intersection)","Une intersection contrôlée"],a:2,en:"Blind intersection",x:"Approchez lentement et avancez progressivement jusqu'à avoir une vue dégagée."},
+{q:"En tournant à gauche ou à droite à une intersection, le véhicule doit s'engager dans quelle voie ?",o:["La voie correspondante","N'importe quelle voie libre","La voie de gauche","La voie la plus rapide"],a:0,en:"Corresponding lane",x:"On tourne dans la voie correspondante : de la voie de droite vers la voie de droite, etc. Point vérifié à l'examen !"},
+{q:"Changer de voie à l'intérieur d'une intersection est :",o:["Permis si signalé","Permis la nuit","Recommandé pour gagner du temps","Dangereux (unsafe)"],a:3,en:"Lane change in intersection — unsafe",x:"Risque de collision avec les véhicules qui tournent et les piétons. À éviter absolument pendant l'examen."},
+{q:"Quand les feux de circulation d'une intersection sont en panne, les conducteurs doivent :",o:["Traiter l'intersection comme un arrêt toutes directions (all-way stop)","Passer sans s'arrêter","Céder seulement à gauche","Attendre la police"],a:0,en:"All-way stop",x:"Feux en panne = arrêt toutes directions. Chacun passe à son tour, premier arrivé, premier parti."}]},
+{t:"Gestion du risque",qs:[
+{q:"Prendre une chance de gagner ou de perdre quelque chose de valeur suite à une action ou une inaction s'appelle :",o:["Le hasard","Le risque","Le danger","L'imprudence"],a:1,en:"Risk",x:"Le risque : la possibilité de conséquences positives ou négatives d'une action ou inaction."},
+{q:"Lequel des éléments suivants est un exemple de « minimisation du risque » ?",o:["Conduire plus vite","Suivre de près","Utiliser ses habiletés d'observation","Ignorer les rétroviseurs"],a:2,en:"Minimizing risk — observation skills",x:"L'observation active est le premier outil de réduction du risque."},
+{q:"Le type de personnalité « rapide, énergique, agressif, s'ennuie vite » est associé à quelle couleur de véhicule dans le cours ?",o:["Rouge","Bleu","Blanc","Gris"],a:0,en:"Driver personality types",x:"Dans l'activité du cours, la personnalité pressée et agressive est associée au rouge."},
+{q:"En conduite, le « danger » (hazard) est la ___ qu'une chose cause un dommage, tandis que le « risque » est la ___ que le dommage se produise.",o:["probabilité / possibilité","certitude / chance","possibilité / probabilité","cause / conséquence"],a:2,en:"Hazard = possibility, Risk = probability",x:"Hazard = possibilité de causer un dommage. Risk = probabilité que le dommage arrive."},
+{q:"Dans l'activité « Trip to Wasaga » du cours, comment s'appellent les deux conducteurs ?",o:["Tom et Tina","Jimmy et Julie","Mike et Mary","Sam et Sophie"],a:1,en:"Trip to Wasaga activity",x:"Jimmy et Julie — l'activité compare deux styles de gestion du risque sur un même trajet."}]},
+{t:"Situations particulières : autobus, urgences, piétons",qs:[
+{q:"Quel véhicule doit s'arrêter à TOUS les passages à niveau, qu'un train approche ou non ?",o:["Un taxi","Une ambulance","Un autobus scolaire (school bus)","Une motocyclette"],a:2,en:"School bus — railway crossings",x:"Les autobus scolaires (et certains véhicules transportant des matières dangereuses) s'arrêtent à tous les passages à niveau."},
+{q:"À l'approche d'un véhicule d'urgence (sirène et gyrophares), vous devez :",o:["Vous ranger à droite — ou à gauche sur une rue à sens unique","Accélérer pour dégager","Vous arrêter au milieu de la voie","Continuer normalement"],a:0,en:"Pull over for emergency vehicles",x:"Rangez-vous à droite et arrêtez-vous ; sur un sens unique, le côté gauche est aussi permis."},
+{q:"Ne pas respecter un panneau d'arrêt, un feu rouge ou un signal de passage à niveau vous vaudra combien de points d'inaptitude ?",o:["6","2","4","3"],a:3,en:"Fail to obey — 3 demerit points",x:"3 points d'inaptitude pour cette infraction."},
+{q:"Tous les véhicules doivent s'arrêter à 20 mètres ___ d'un autobus scolaire dont les feux clignotent et le bras d'arrêt est déployé.",o:["devant","derrière","à côté","en face"],a:1,en:"Stop 20 metres behind school bus",x:"20 mètres derrière l'autobus scolaire arrêté. En sens inverse (route non divisée), il faut aussi s'arrêter."},
+{q:"Après vous être arrêté à un passage pour piétons (pedestrian crossover), quand pouvez-vous repartir ?",o:["Quand le piéton a traversé la moitié","Dès que le piéton dépasse votre voiture","Après que le piéton a complètement traversé la chaussée","Après 5 secondes"],a:2,en:"Pedestrian crossover",x:"Au crossover (marqué et signalisé), on attend que le piéton ait ENTIÈREMENT traversé — c'est la loi, et un échec automatique à l'examen sinon."}]},
+{t:"Conduite sur autoroute",qs:[
+{q:"La plupart des passages à niveau en Ontario sont marqués d'un panneau en « X » de quelles couleurs ?",o:["Rouge et blanc","Jaune et noir","Vert et blanc","Orange et noir"],a:0,en:"Railway crossing sign — red and white X",x:"Le X rouge et blanc signale un passage à niveau."},
+{q:"Vous avez manqué votre sortie sur une autoroute. Que faire ?",o:["Reculer sur l'accotement","Faire demi-tour","Continuer jusqu'à la prochaine sortie","S'arrêter et attendre"],a:2,en:"Missed exit — drive to the next exit",x:"JAMAIS reculer ni faire demi-tour sur une autoroute. On continue jusqu'à la prochaine sortie."},
+{q:"Quelle est la limite de vitesse sur une route rurale si aucune limite n'est affichée ?",o:["100 km/h","60 km/h","90 km/h","80 km/h"],a:3,en:"Rural highway — 80 km/h default",x:"80 km/h par défaut hors agglomération ; 50 km/h en ville si rien n'est affiché."},
+{q:"La voie réservée au covoiturage (HOV) sur la QEW a une limite affichée de ___ km/h et exige un minimum de ___ passager(s).",o:["110 / 2","100 / 1","90 / 2","100 / 3"],a:1,en:"HOV lane — High Occupancy Vehicle",x:"100 km/h et minimum 1 passager (donc 2 personnes ou plus dans le véhicule)."},
+{q:"Que vous indiquent les numéros d'échangeur (interchange numbers) sur un panneau indicateur d'autoroute ?",o:["La distance depuis le point de départ de l'autoroute","Le nombre de voies","La vitesse recommandée","Le numéro de la route croisée"],a:0,en:"Interchange number tabs",x:"Le numéro correspond à la distance en km depuis le début de l'autoroute — pratique pour calculer votre trajet."},
+{q:"Vous entrez sur l'autoroute par une bretelle d'accès (on-ramp). Que devez-vous faire avant de vous insérer ?",o:["Ralentir pour laisser la place aux autres","Accélérer pour atteindre la vitesse de la circulation avant de vous insérer","Vous arrêter au bout de la bretelle","Signaler seulement après vous être inséré"],a:1,en:"Merging onto a highway via an on-ramp",x:"La bretelle d'accès sert à accélérer jusqu'à la vitesse de l'autoroute — s'insérer trop lentement force les autres véhicules à freiner, une cause fréquente d'accidents."},
+{q:"Pour sortir de l'autoroute à la bonne sortie, à quel moment devez-vous ralentir ?",o:["Sur l'autoroute elle-même, avant la bretelle de sortie","Seulement une fois sur la bretelle de sortie (exit ramp)","Dès que vous apercevez le panneau de sortie, même 5 km avant","Peu importe, la vitesse n'est pas limitée sur la bretelle"],a:1,en:"Exiting a highway via an off-ramp",x:"On maintient la vitesse de l'autoroute jusqu'à la bretelle de sortie, puis on ralentit sur la bretelle elle-même — freiner sur la voie active de l'autoroute est dangereux pour les véhicules derrière vous."}]},
+{t:"Dispositifs de sécurité du véhicule",qs:[
+{q:"Les ___ sont des éléments structurels conçus pour se déformer lors d'une collision et absorber l'énergie.",o:["barres latérales","pare-chocs","zones déformables (crumple zones)","cadres rigides"],a:2,en:"Crumple zones",x:"Les crumple zones absorbent l'énergie de l'impact pour protéger l'habitacle."},
+{q:"Combien de temps faut-il approximativement à un coussin gonflable pour se déployer ?",o:["50 millisecondes","1 seconde","5 secondes","half a second"],a:0,en:"Airbag — 50 milliseconds",x:"Environ 50 millisecondes — d'où l'importance de la position des mains à 9 h et 3 h."},
+{q:"En tant que conducteur, vous êtes responsable de vous assurer que tous les passagers de moins de ___ ans sont correctement attachés.",o:["12","18","14","16"],a:3,en:"Driver responsible — passengers under 16",x:"Moins de 16 ans : ceinture, siège d'auto ou siège d'appoint selon l'âge/poids — c'est la responsabilité du conducteur."},
+{q:"Les dispositifs de sécurité du véhicule ne remplacent pas un conducteur attentif ; ils ne font que l'___ à être plus sécuritaire.",o:["obliger","assister","remplacer","surveiller"],a:1,en:"Safety features assist the driver",x:"ABS, ESC, caméras : des assistants, jamais des remplaçants du conducteur engagé."},
+{q:"Les passagers de 8 à 12 ans doivent utiliser quel dispositif de retenue ?",o:["Un siège d'auto orienté vers l'arrière","Un harnais 5 points","La ceinture de sécurité ordinaire","Aucun dispositif requis"],a:2,en:"Regular seat belt (ages 8–12)",x:"À partir de 8 ans (ou selon taille/poids), la ceinture ordinaire suffit."}]},
+{t:"Collisions et procédures d'accident",qs:[
+{q:"95 % des collisions signalées à la police résultent d'une erreur humaine. Lequel de ces mots décrit une erreur humaine ?",o:["Distrait (distracted)","Mécanique","Météorologique","Aléatoire"],a:0,en:"Human error — distracted",x:"La distraction est l'erreur humaine typique derrière la majorité des collisions."},
+{q:"Si les dommages estimés dépassent ___, les conducteurs doivent appeler la police ou se rendre au centre de déclaration de collision (CRC).",o:["500 $","1 000 $","2 000 $","5 000 $"],a:2,en:"CRC — Collision Reporting Centre ($2,000)",x:"Seuil de 2 000 $ de dommages : police ou CRC dès que possible."},
+{q:"Sur les lieux d'une collision, qui peut assigner une dépanneuse pour retirer votre véhicule ?",o:["N'importe quel témoin","Un policier","Le conducteur adverse","Votre assureur seulement"],a:1,en:"Police officer assigns tow truck",x:"Un policier présent sur les lieux peut assigner un remorqueur. Méfiez-vous des remorqueurs non sollicités."},
+{q:"Quelle information n'êtes-vous PAS tenu de partager sur les lieux d'une collision ?",o:["Votre nom","Votre assurance","Votre numéro de permis","Votre destination"],a:3,en:"Information exchange at crash scene",x:"Nom, coordonnées, assurance, immatriculation : oui. Votre destination : non requise."},
+{q:"Laquelle de ces actions n'est PAS considérée comme une manœuvre d'évitement (evasive manoeuvre) ?",o:["Freinage d'urgence","Coup de volant d'évitement","Mettre son clignotant (signalling)","Accélération d'évitement"],a:2,en:"Evasive manoeuvres",x:"Signaler est une communication, pas une manœuvre d'évitement physique."}]},
+{t:"Infractions et points d'inaptitude",qs:[
+{q:"Les conducteurs impliqués dans une course de rue / conduite acrobatique (stunt driving) subissent une suspension immédiate de permis de combien de jours ?",o:["30","14","7","90"],a:2,en:"Stunt driving — 7-day suspension",x:"Suspension immédiate de 7 jours du permis ET saisie du véhicule 14 jours."},
+{q:"Si vous êtes victime de rage au volant et qu'on vous suit, quelle destination est la PLUS dangereuse à choisir ?",o:["Votre domicile","Un poste de police","Une station-service achalandée","Un centre commercial"],a:0,en:"Road rage — never drive home",x:"Ne menez jamais un agresseur chez vous. Dirigez-vous vers un poste de police ou un lieu public très fréquenté."},
+{q:"La conduite imprudente (careless driving) est une infraction provinciale entraînant combien de points d'inaptitude ?",o:["3","6","4","9"],a:1,en:"Careless driving — 6 demerit points",x:"6 points, plus amende et possible suspension. Infraction provinciale (pas criminelle)."},
+{q:"« Mise en danger du public » est considérée comme une infraction de quel niveau ?",o:["Municipale","Provinciale","Fédérale","Civile"],a:2,en:"Endangerment — federal offence",x:"La mise en danger du grand public relève du Code criminel du Canada (fédéral)."},
+{q:"Quelle est l'amende maximale pour un conducteur intercepté à 50 km/h ou plus au-dessus de la limite ?",o:["2 000 $","5 000 $","25 000 $","10 000 $"],a:3,en:"Maximum fine — $10,000",x:"Jusqu'à 10 000 $ d'amende pour excès de vitesse de 50 km/h et plus (stunt driving)."}]},
+{t:"Alcool au volant",qs:[
+{q:"Un conducteur dépassant la limite légale (plus de 0,08 % d'alcoolémie) subit une suspension immédiate de :",o:["90 jours","30 jours","7 jours","1 an"],a:0,en:"BAC over .08 — 90-day suspension",x:"Suspension administrative immédiate de 90 jours, plus les accusations criminelles."},
+{q:"Quel programme est mis en place en Ontario pour réduire la conduite avec facultés affaiblies ?",o:["STOP","R.I.D.E.","CHECK","SAFE"],a:1,en:"R.I.D.E. — Reduce Impaired Driving Everywhere",x:"Les contrôles routiers R.I.D.E. permettent à la police de vérifier la sobriété des conducteurs."},
+{q:"Un conducteur avec une alcoolémie de 0,075 % (75 mg) aura besoin d'environ combien de temps pour éliminer tout l'alcool de son corps ?",o:["1 heure","2 heures","5 heures","30 minutes"],a:2,en:"Alcohol elimination time",x:"Environ 5 heures. Seul le temps élimine l'alcool — ni café, ni douche froide."},
+{q:"Laquelle de ces infractions n'est PAS une infraction au Code criminel du Canada (CCC) ?",o:["Conduite avec facultés affaiblies","Refus de fournir un échantillon","Conduite dangereuse","Conduite imprudente (careless driving)"],a:3,en:"Careless driving — provincial, not CCC",x:"La conduite imprudente est provinciale ; les trois autres sont criminelles."},
+{q:"Le programme correctif obligatoire pour tout conducteur reconnu coupable de conduite avec facultés affaiblies s'appelle :",o:["Fresh Start","Back on Track","Safe Return","Drive Clean"],a:1,en:"Back on Track program",x:"Back on Track : évaluation, éducation/traitement et suivi obligatoires avant la remise du permis."}]},
+{t:"Drogues et conduite",qs:[
+{q:"Échec routier (Crime Stoppers) : la récompense offerte pour une information menant à une arrestation peut atteindre :",o:["500 $","1 000 $","2 000 $","5 000 $"],a:2,en:"Crime Stoppers — up to $2,000",x:"Jusqu'à 2 000 $ de récompense pour une information menant à une arrestation."},
+{q:"Que signifient les initiales CCC ?",o:["Canadian Car Code","Criminal Code of Canada (Code criminel du Canada)","Central Crime Commission","Canada Conduct Charter"],a:1,en:"CCC — Criminal Code of Canada",x:"Le Code criminel du Canada régit les infractions criminelles de conduite."},
+{q:"La loi canadienne sur la drogue au volant : un conducteur ayant plus de 5 ng de THC par ml de sang dans les ___ suivant la conduite peut être accusé.",o:["30 minutes","24 heures","12 heures","2 heures"],a:3,en:"THC — 5 ng within 2 hours",x:"Plus de 5 ng/ml de THC dans les 2 heures de conduite = infraction criminelle."},
+{q:"La Loi fédérale sur le cannabis, légalisant l'usage récréatif, est entrée en vigueur le :",o:["17 octobre 2018","1er juillet 2018","1er janvier 2019","17 octobre 2017"],a:0,en:"Cannabis Act — October 17, 2018",x:"Légal ne veut pas dire permis au volant : la conduite sous influence du cannabis reste criminelle."},
+{q:"Si un professionnel de la santé vous a autorisé à utiliser du cannabis ou un autre médicament, votre responsabilité est de vous assurer que vous :",o:["avez l'ordonnance dans la voiture","conduisez seulement le jour","n'êtes pas avec facultés affaiblies au volant","informez votre assureur"],a:2,en:"Not impaired while driving",x:"Même avec ordonnance, conduire avec facultés affaiblies reste criminel."}]},
+{t:"Distraction au volant",qs:[
+{q:"Rappelez-vous de ___ votre conduite en tout temps. Une distraction d'une fraction de seconde peut causer une collision.",o:["vous concentrer sur (focus on)","varier","accélérer","documenter"],a:0,en:"Focus on your driving",x:"La concentration continue est la première défense contre les collisions."},
+{q:"La distraction au volant (maquillage, nourriture, technologie embarquée) peut aussi mener à :",o:["Un simple avertissement","Une accusation de conduite imprudente ou dangereuse","Une amende de stationnement","Rien si personne n'est blessé"],a:1,en:"Careless or dangerous driving charge",x:"Au-delà de l'amende « distracted driving », on peut être accusé de conduite imprudente ou dangereuse."},
+{q:"Les épisodes de microsommeil durent d'une fraction de seconde à ___, souvent sans que le conducteur s'en rende compte.",o:["10 secondes","30 secondes","5 minutes","2 minutes"],a:3,en:"Microsleep — up to 2 minutes",x:"Jusqu'à 2 minutes de microsommeil sans en avoir conscience. La fatigue = facultés affaiblies."},
+{q:"___ est l'incapacité de remarquer un objet pourtant visible parce que l'attention était engagée ailleurs.",o:["La vision tunnel","La cécité nocturne","La cécité d'inattention (inattentive blindness)","La fixation"],a:2,en:"Inattentive blindness",x:"On regarde sans voir : le cerveau occupé ailleurs ne traite pas l'information visuelle."},
+{q:"Les lois ontariennes sur la distraction au volant ont été introduites en :",o:["2015","2009","2005","2018"],a:1,en:"Distracted driving laws — 2009",x:"Premières lois en 2009, durcies depuis (amendes, points, suspensions)."}]},
+{t:"Conduite de nuit et conditions défavorables",qs:[
+{q:"« Dépasser la portée de ses phares » (over-driving your headlights) signifie que votre ___ dépasse ce que vous pouvez voir.",o:["distance d'arrêt (stopping distance)","vitesse affichée","champ de vision","temps de trajet"],a:0,en:"Over-driving headlights — stopping distance",x:"Si votre distance d'arrêt dépasse la portée de vos phares, vous ne pouvez pas éviter ce que vous verrez trop tard."},
+{q:"Le terme « conditions défavorables » (adverse conditions) désigne tout événement météo qui augmente le risque de collision à cause de :",o:["la fatigue du conducteur","une visibilité limitée et/ou une mauvaise adhérence","la densité de circulation","l'heure de la journée"],a:1,en:"Adverse conditions — visibility and traction",x:"Pluie, neige, brouillard, verglas : visibilité réduite et/ou traction réduite."},
+{q:"Utilisez vos feux de croisement (low beams) quand vous êtes à moins de ___ derrière un autre véhicule.",o:["120 mètres","30 mètres","60 mètres","150 mètres"],a:2,en:"Low beams — within 60 metres",x:"60 m derrière un véhicule ; 150 m face à un véhicule qui approche."},
+{q:"La nuit, le système d'éclairage complet du véhicule doit être allumé ___ avant le coucher du soleil et ___ après le lever du soleil.",o:["30 minutes / 30 minutes","1 heure / 1 heure","15 minutes / 15 minutes","au coucher / au lever exactement"],a:0,en:"Full lighting — 30 minutes before/after",x:"Une demi-heure avant le coucher et une demi-heure après le lever du soleil."},
+{q:"La conduite de nuit affecte la perception de la profondeur, la reconnaissance des couleurs et :",o:["l'ouïe","la mémoire","le temps de réaction seulement","la vision périphérique (latérale)"],a:3,en:"Peripheral (side) vision",x:"La vision périphérique est réduite la nuit — d'où un balayage visuel encore plus actif."}]},
+{t:"Conduite hivernale",qs:[
+{q:"En hiver, vous devriez réchauffer le véhicule pendant au maximum ___ avant de partir.",o:["5 minutes","30 secondes","2 minutes","10 minutes"],a:1,en:"Warm up — 30 seconds max",x:"30 secondes suffisent pour les moteurs modernes ; le véhicule se réchauffe mieux en roulant doucement."},
+{q:"Que devrait contenir votre trousse d'urgence hivernale ?",o:["Balai à neige, cellulaire et liquide lave-glace","Seulement des câbles de démarrage","Une pelle uniquement","Des chaînes obligatoires"],a:0,en:"Winter emergency kit",x:"Balai à neige, cellulaire chargé, lave-glace — plus couverture, gants, lampe de poche idéalement."},
+{q:"Les pneus toutes saisons sont conçus pour performer au-dessus de quelle température ?",o:["0 °C","-5 °C","7 °C","15 °C"],a:2,en:"All-season tires — above 7°C",x:"Sous 7 °C, la gomme durcit et perd son adhérence : les pneus d'hiver deviennent nécessaires."},
+{q:"La glace noire se forme en premier sur :",o:["les routes de campagne","les stationnements","les pentes","les ponts, viaducs et passages inférieurs"],a:3,en:"Black ice — bridges and overpasses",x:"L'air circule dessus ET dessous : ces structures gèlent en premier."},
+{q:"ESC est l'acronyme d'une technologie qui améliore la stabilité en détectant et réduisant la perte de traction. Son nom complet est :",o:["Extra Safety Control","Engine Stability Check","Electronic Stability Control (contrôle électronique de stabilité)","Emergency Stop Command"],a:2,en:"ESC — Electronic Stability Control",x:"L'ESC détecte le dérapage et freine individuellement les roues pour stabiliser le véhicule."}]},
+{t:"Véhicule, finances et technologies",qs:[
+{q:"Un véhicule autonome est aussi appelé :",o:["un véhicule autonome (autonomous vehicle)","un véhicule hybride","un véhicule connecté","un véhicule électrique"],a:0,en:"Autonomous vehicle",x:"Self-driving = autonomous. Il combine capteurs et logiciels pour se déplacer."},
+{q:"Qu'est-ce que la dépréciation d'un véhicule ?",o:["L'augmentation de l'assurance","Une diminution de la valeur du véhicule","Le coût de l'entretien","La perte d'essence"],a:1,en:"Depreciation",x:"La perte de valeur du véhicule dans le temps — le plus gros coût caché d'une voiture neuve."},
+{q:"En Ontario, chaque conducteur doit détenir un minimum de ___ en couverture ___ sur sa police d'assurance auto.",o:["100 000 $ / collision","500 000 $ / tous risques","50 000 $ / vol","200 000 $ / responsabilité civile (liability)"],a:3,en:"$200,000 liability minimum",x:"200 000 $ de responsabilité civile est le minimum légal (1 M$ à 2 M$ fortement recommandé)."},
+{q:"La location (lease) est un type de financement auto qui vous permet de ___ un véhicule pour une durée et un kilométrage déterminés.",o:["acheter","revendre","louer (rent)","assurer"],a:2,en:"Lease — rent a vehicle",x:"Louer, pas posséder : durée et kilométrage limités, pénalités si dépassés."},
+{q:"V2V est l'abréviation de :",o:["Vehicle to Vehicle (technologie de véhicule à véhicule)","Video to Vision","Voice to Vehicle","Value to Volume"],a:0,en:"V2V — Vehicle to Vehicle technology",x:"Les véhicules communiquent entre eux (position, vitesse, freinage) pour prévenir les collisions."}]},
+{t:"Préparation à l'examen pratique",qs:[
+{q:"___ est le partage d'un trajet avec plus d'une personne voyageant dans un véhicule.",o:["L'autopartage","Le covoiturage (carpooling)","Le taxi collectif","Le transport actif"],a:1,en:"Carpooling",x:"Le covoiturage réduit les coûts, la congestion et la pollution."},
+{q:"L'autocollant « tire and load information » (pression et charge) se trouve habituellement :",o:["Dans le coffre","Sous le capot","Sur le cadre de la portière du conducteur","Dans le manuel seulement"],a:2,en:"Driver's door frame sticker",x:"Cadre de la portière conducteur : pression des pneus recommandée et charge maximale."},
+{q:"Si vous ne pouvez pas vous présenter à votre examen routier, vous devez annuler au moins ___ avant, sinon vous perdez vos frais.",o:["24 heures","1 semaine","12 heures","48 heures"],a:3,en:"Cancel road test — 48 hours",x:"48 heures d'avis minimum à DriveTest pour ne pas perdre les frais d'examen."},
+{q:"En stationnement en pente montante AVEC bordure, vos roues avant doivent être tournées :",o:["vers la bordure","dans le sens de la circulation","à l'opposé de la bordure (away from the curb)","droites"],a:2,en:"Hill park — away from the curb (uphill with curb)",x:"Montée avec bordure : roues vers l'extérieur — si la voiture recule, la roue bute contre la bordure. Descente : vers la bordure."},
+{q:"Quelle manœuvre ne fait PAS partie de l'examen routier G2 (en ville) ?",o:["Le stationnement parallèle","La conduite sur autoroute (freeway driving)","Le virage à trois points","L'arrêt en bordure"],a:1,en:"G2 test — no freeway driving",x:"L'autoroute est réservée à l'examen G complet. Le G2 : ville, stationnements, virages, observation."}]}
+];
+
+const FINAL=[
+{q:"En tant que conducteur débutant, votre première responsabilité est de vous assurer que vous êtes prêt ___ à conduire correctement, légalement et attentivement.",o:["physiquement et mentalement","financièrement","techniquement","légalement seulement"],a:0,en:"Physically and mentally ready",x:"Être prêt physiquement ET mentalement avant chaque départ."},
+{q:"Un conducteur accompagnateur doit s'asseoir sur le siège passager avant, détenir un permis G valide et avoir au moins ___ d'expérience de conduite.",o:["2 ans","4 ans","1 an","6 ans"],a:1,en:"Accompanying driver — 4 years",x:"4 ans d'expérience minimum avec un permis G (ou supérieur)."},
+{q:"En approchant d'un panneau d'arrêt, vous devez vous arrêter complètement à la ligne d'arrêt, au passage piéton ou au ___ du trottoir.",o:["milieu","centre","bord (edge)","dessus"],a:2,en:"Edge of the curb",x:"Sans marquage : arrêt au bord (edge) du trottoir, là où les rues se rejoignent."},
+{q:"Le tour d'inspection (circle check) est une inspection visuelle rapide recherchant des signes ___ de dommage, de défaillance ou de risques immédiats.",o:["visibles","potentiels","majeurs","anciens"],a:1,en:"Potential signs — circle check",x:"On cherche les signes potentiels de problème avant de prendre la route."},
+{q:"En approchant ou traversant une intersection, le conducteur balaie à gauche, au centre, à droite, puis ___ pour repérer les dangers.",o:["encore à gauche","derrière","au centre","encore à droite"],a:0,en:"Left again",x:"Le dernier regard revient à gauche : premier point d'où peut surgir un danger."},
+{q:"La gestion de l'espace crée un coussin devant, derrière et sur les côtés. La ___ avec les autres usagers permet à chacun de connaître les intentions des autres.",o:["compétition","distance","communication","patience"],a:2,en:"Communication",x:"Clignotants, position, contact visuel : on communique ses intentions."},
+{q:"Les ___ guident les conducteurs, cyclistes et piétons sur ce qu'ils doivent faire aux intersections et le long des routes.",o:["policiers","feux de circulation (traffic signals)","lignes jaunes","panneaux publicitaires"],a:1,en:"Traffic signals",x:"Les feux de circulation dirigent tous les usagers de la route."},
+{q:"La gestion du risque est le processus de ___ qui détermine le risque global d'une action selon la chance de gagner ou perdre quelque chose de valeur.",o:["mémorisation","prise de décision (decision-making)","calcul mathématique","respiration"],a:1,en:"Decision-making process",x:"Gérer le risque = décider en continu, à chaque seconde de conduite."},
+{q:"Les ___ sont des zones désignées permettant aux piétons de traverser en sécurité là où il n'y a pas de feux de circulation.",o:["trottoirs","accotements","zones scolaires","passages pour piétons (pedestrian crossovers)"],a:3,en:"Pedestrian crossovers",x:"Les crossovers : marquage + panneaux (parfois feux clignotants). Arrêt obligatoire jusqu'à traversée complète."},
+{q:"Une autoroute (freeway) est une route à voies multiples à ___ aussi appelée voie rapide — conçue pour la circulation à haute vitesse.",o:["accès contrôlé (controlled-access)","péage","sens unique","double sens"],a:0,en:"Controlled-access highway",x:"Accès contrôlé : entrées et sorties uniquement par bretelles."},
+{q:"La conception des véhicules se concentre sur le développement de ___ pour réduire les décès et blessures graves lors de collisions majeures.",o:["moteurs puissants","dispositifs de sécurité (safety features)","designs aérodynamiques","systèmes audio"],a:1,en:"Safety features",x:"Coussins, zones déformables, ESC, freinage d'urgence automatique…"},
+{q:"Les ___ sont des accidents évitables où un véhicule heurte un autre véhicule, un piéton, un animal, un débris ou un objet fixe.",o:["incidents","collisions","dérapages","accrochages"],a:1,en:"Collisions (not 'accidents')",x:"On dit « collision » et non « accident » : 95 % sont évitables, causées par l'erreur humaine."},
+{q:"La conduite agressive est un comportement ___ qui met en danger la sécurité des autres conducteurs.",o:["accidentel","involontaire","intentionnel (intentional)","occasionnel"],a:2,en:"Intentional driving behaviour",x:"L'agressivité au volant est un choix intentionnel — et une infraction."},
+{q:"Le terme ___ désigne l'infraction criminelle d'opérer un véhicule alors que la capacité de conduire est affaiblie par l'alcool et/ou une drogue.",o:["conduite distraite","conduite imprudente","excès de vitesse","conduite avec facultés affaiblies (impaired driving)"],a:3,en:"Impaired driving",x:"Impaired driving = infraction au Code criminel du Canada."},
+{q:"Si la police soupçonne une intoxication d'après votre apparence, vos mouvements ou une odeur d'alcool, elle est autorisée à effectuer des ___ et demander des échantillons.",o:["tests de sobriété (sobriety tests)","fouilles complètes","interrogatoires","saisies de téléphone"],a:0,en:"Sobriety tests",x:"Tests de sobriété sur place + échantillons d'haleine/fluides corporels si soupçon raisonnable."},
+{q:"La conduite ___ se produit quand un conducteur opère un véhicule tout en participant à des activités qui détournent son attention de la conduite.",o:["distraite (distracted)","préventive","défensive","assistée"],a:0,en:"Distracted driving",x:"Téléphone, nourriture, maquillage, écrans : tout ce qui détourne les yeux, les mains ou l'esprit."},
+{q:"Les ___ désignent tout événement météo qui augmente le risque de collision par visibilité limitée et/ou mauvaise adhérence.",o:["tempêtes majeures","alertes météo","conditions défavorables (adverse conditions)","saisons froides"],a:2,en:"Adverse conditions",x:"Pluie, neige, brouillard, verglas — on ralentit et on augmente les distances."},
+{q:"Les fenêtres enneigées, givrées ou embuées réduisent la visibilité. Ces conditions changeantes rendent la conduite hivernale plus ___.",o:["rapide","exigeante (challenging)","économique","courte"],a:1,en:"More challenging",x:"Traction et visibilité réduites : la conduite d'hiver exige plus d'anticipation."},
+{q:"Les véhicules autonomes ___ des capteurs et des logiciels pour se contrôler, naviguer et manœuvrer sur les routes.",o:["combinent (combine)","remplacent","éliminent","ignorent"],a:0,en:"Combine sensors and software",x:"Capteurs + logiciels travaillent ensemble pour la conduite autonome."},
+{q:"Les tâches d'entretien, comme changer l'huile ou vérifier la pression des pneus, aident à prévenir les ___.",o:["contraventions","pannes (break downs)","collisions seulement","dépréciations"],a:1,en:"Prevent break downs",x:"Un entretien régulier prévient les pannes — et les situations dangereuses qu'elles créent."}
+];
+
+const LEXIQUE=[
+["Mirror check","Vérification des rétroviseurs","À faire toutes les 5–8 secondes — l'examinateur vous observe."],
+["Shoulder check / Blind spot check","Vérification de l'angle mort","Menton vers l'épaule avant chaque virage et changement de voie."],
+["Signal / Turn signal","Clignotant","« Signal left / Signal right » = mettez votre clignotant."],
+["Pull over","Rangez-vous sur le côté","« Pull over when it's safe » : ralentir, signaler, se ranger à droite."],
+["Yield","Céder le passage","Panneau triangle inversé : laissez passer sans nécessairement vous arrêter."],
+["Merge","S'insérer / fusionner","Entrer dans la circulation (bretelle d'autoroute, voie qui se termine)."],
+["Lane change","Changement de voie","Toujours précédé de MSB : Mirrors – Signal – Blind spot."],
+["Right-of-way","Priorité de passage","Savoir qui passe en premier — question clé de l'examen."],
+["Intersection","Intersection / carrefour","Balayage : left – centre – right – left."],
+["Stop line","Ligne d'arrêt","La grande ligne blanche : arrêt COMPLET avant celle-ci."],
+["Crosswalk / Pedestrian crossover","Passage pour piétons","Au crossover : attendre que le piéton ait entièrement traversé."],
+["Parallel parking","Stationnement parallèle","Manœuvre évaluée à l'examen G2."],
+["Three-point turn","Virage à trois points / demi-tour en trois temps","Aussi appelé « K-turn ». Vérifiez les angles morts à chaque temps."],
+["Hill parking","Stationnement en pente","Uphill with curb = roues vers l'extérieur (away from the curb)."],
+["Curb","Bordure / trottoir","« Pull close to the curb » : rapprochez-vous de la bordure."],
+["Speed limit","Limite de vitesse","Non affichée : 50 km/h en ville, 80 km/h en zone rurale."],
+["Roundabout","Rond-point / carrefour giratoire","Céder à gauche en entrant, signaler en sortant."],
+["Proceed","Avancez / continuez","« Proceed when safe » : avancez quand c'est sécuritaire."],
+["Back up / Reverse","Reculer","Regardez par-dessus votre épaule droite en reculant."],
+["Emergency brake / Parking brake","Frein à main / de stationnement","À engager pour le stationnement en pente."],
+["Windshield","Pare-brise","Doit être dégagé (neige, givre, buée) avant de partir."],
+["Threshold braking","Freinage au seuil","Freinage ferme et contrôlé, juste avant le blocage des roues."],
+["Circle check","Tour d'inspection du véhicule","Inspection visuelle rapide avant de monter à bord."],
+["Demerit points","Points d'inaptitude","S'accumulent : à 9 points (permis complet), entrevue obligatoire au MTO."],
+["Transit lane","Voie réservée au transport en commun","Signalée par un losange et un pictogramme d'autobus — réservée aux autobus (et parfois taxis/covoiturage)."],
+["Buses excepted","Sauf autobus","Une restriction affichée ne s'applique pas aux autobus — ex. une voie interdite aux autos mais permise aux bus."],
+["Chevron alignment sign","Panneau d'alignement (chevrons)","Flèches noires sur fond jaune indiquant la direction et la sévérité d'une courbe à venir."],
+["Transit signal","Signal de transport en commun","Feu distinct qui ne s'adresse qu'aux autobus/tramways — les autres conducteurs suivent le feu normal."],
+["On-ramp","Bretelle d'accès","Voie d'accélération pour entrer sur l'autoroute à la vitesse de la circulation."],
+["Off-ramp / Exit ramp","Bretelle de sortie","Voie de décélération pour quitter l'autoroute — on y ralentit, jamais sur la voie principale."],
+["Emergency stop","Arrêt d'urgence","Freinage ferme et immédiat, tout en gardant le contrôle du volant."],
+["Perpendicular parking","Stationnement perpendiculaire (à 90°)","Se garer en angle droit par rapport à la bordure ou aux lignes du stationnement."],
+["No turn on red","Virage interdit au feu rouge","Un panneau spécifique interdit un virage (généralement à droite) même si le feu est rouge."]
+];
+
+/* Modules ciblés examen pratique (G2 / G full) */
+const EXPRESS_MODS=[2,3,4,5,6,8,9,15,19];
+
+/* ================== PHASE 2 : SIMULATEUR EXAMINATEUR ==================
+   Consigne réaliste de l'examinateur DriveTest (en anglais) + la séquence
+   de gestes attendue, en choix multiple. */
+const EXAMINER=[
+{q:"L'examinateur dit : « Turn left at the lights. » Quelle est la séquence correcte ?",
+ o:["Rétroviseurs → Signal → Vitesse → Angle mort → Position dans la voie → Virage",
+    "Signal → Rétroviseurs → Virage → Angle mort",
+    "Vitesse → Virage → Signal → Rétroviseurs",
+    "Angle mort → Signal → Rétroviseurs → Virage"],a:0,en:"Turn left at the lights",
+ x:"On vérifie toujours les rétroviseurs AVANT de signaler (il faut savoir ce qu'il y a derrière avant d'annoncer son intention), puis on ajuste la vitesse, on se positionne dans la bonne voie, angle mort juste avant de tourner, puis on tourne."},
+{q:"L'examinateur dit : « Pull over when it's safe. » Quelle est la séquence correcte ?",
+ o:["Rétroviseurs → Signal → Angle mort → Ralentir → S'arrêter près du trottoir",
+    "S'arrêter immédiatement → Signal → Rétroviseurs",
+    "Signal → S'arrêter → Rétroviseurs → Angle mort",
+    "Ralentir → S'arrêter → Signal après coup"],a:0,en:"Pull over when it's safe",
+ x:"On vérifie d'abord qu'on peut se ranger en sécurité (rétroviseurs), on signale son intention, on vérifie l'angle mort, puis on ralentit et on s'arrête près du trottoir — jamais l'inverse."},
+{q:"L'examinateur dit : « Merge onto the highway. » Quelle est la séquence correcte ?",
+ o:["Rétroviseurs → Signal → Ajuster sa vitesse à celle de l'autoroute → Angle mort → S'insérer",
+    "S'insérer directement → Signal → Rétroviseurs",
+    "Ralentir → S'insérer → Signal",
+    "Angle mort → S'insérer → Rétroviseurs → Signal"],a:0,en:"Merge onto the highway",
+ x:"Sur la bretelle d'accès, on doit atteindre la vitesse de l'autoroute AVANT de s'insérer — s'insérer trop lentement est une des causes d'échec les plus fréquentes à cette étape."},
+{q:"L'examinateur dit : « Change lanes to the right. » Quelle est la séquence correcte (MSB) ?",
+ o:["Mirror → Signal → Blind spot (angle mort) → Changer de voie",
+    "Signal → Blind spot → Mirror → Changer de voie",
+    "Blind spot → Mirror → Signal → Changer de voie",
+    "Changer de voie → Signal → Vérifier après coup"],a:0,en:"Change lanes to the right",
+ x:"MSB : Mirror (rétroviseurs), Signal (clignotant), Blind spot (angle mort) — toujours dans cet ordre, à chaque changement de voie."},
+{q:"L'examinateur dit : « Parallel park between the cones. » Quelle est la séquence correcte ?",
+ o:["Signal → Rétroviseurs → Angle mort → Aligner avec le véhicule avant → Reculer lentement → Redresser → Ajuster",
+    "Reculer directement → Signal → Redresser",
+    "Aligner → Reculer → Signal → Rétroviseurs",
+    "Angle mort → Aligner → Signal → Reculer"],a:0,en:"Parallel park between the cones",
+ x:"On signale et vérifie d'abord son environnement, on s'aligne avec le véhicule devant, puis on recule lentement en surveillant, on tourne au bon moment et on redresse."},
+{q:"L'examinateur dit : « Make a U-turn where permitted. » Quelle est la séquence correcte ?",
+ o:["Vérifier qu'aucune circulation n'approche → Signal → Angle mort → Tourner largement → Redresser",
+    "Signal → Tourner immédiatement → Vérifier après coup",
+    "Angle mort → Vérifier la circulation → Tourner → Signal",
+    "Tourner largement → Signal → Angle mort"],a:0,en:"Make a U-turn where permitted",
+ x:"Un demi-tour n'est permis que si la voie est complètement dégagée dans les deux sens — on vérifie AVANT de signaler, puis on tourne largement pour ne pas monter sur le trottoir."},
+{q:"L'examinateur dit : « Turn right at the stop sign. » Quelle est la séquence correcte ?",
+ o:["Arrêt complet → Balayage gauche-centre-droite-gauche → Vérifier piétons/cyclistes → Tourner quand sécuritaire",
+    "Tourner sans arrêt complet si la voie semble libre",
+    "Balayage → Arrêt → Tourner",
+    "Arrêt complet → Tourner immédiatement"],a:0,en:"Turn right at the stop sign",
+ x:"Un arrêt incomplet à un stop est un échec automatique fréquent. On s'arrête complètement, on balaie, on vérifie spécifiquement les piétons et cyclistes qui pourraient tourner avec vous, puis on tourne."},
+{q:"L'examinateur dit : « Proceed through the intersection. » Quelle est la séquence correcte ?",
+ o:["Confirmer la priorité de passage → Balayer l'intersection → Maintenir une vitesse constante → Continuer tout droit",
+    "Accélérer pour dégager rapidement",
+    "Ralentir sans raison au milieu de l'intersection",
+    "Regarder seulement devant soi"],a:0,en:"Proceed through the intersection",
+ x:"Même sans arrêt requis, on confirme qu'on a la priorité, on balaie l'intersection du regard, et on maintient une vitesse constante — ni accélération ni freinage inutile."},
+{q:"L'examinateur dit : « Back up into the parking spot. » Quelle est la séquence correcte ?",
+ o:["Vérifier les alentours → Signal si nécessaire → Regarder par-dessus l'épaule droite → Reculer lentement → Redresser et s'arrêter",
+    "Reculer en se fiant uniquement au rétroviseur",
+    "Signal → Reculer vite → Regarder par-dessus l'épaule",
+    "Redresser avant de reculer"],a:0,en:"Back up into the parking spot",
+ x:"En reculant, le regard par-dessus l'épaule droite (pas seulement le rétroviseur) est obligatoire — c'est un point vérifié systématiquement à l'examen."},
+{q:"L'examinateur dit : « Stop, then continue when clear. » Quelle est la séquence correcte ?",
+ o:["Arrêt complet → Rétroviseurs → Angle mort → Avancer quand la voie est libre",
+    "Ralentir seulement, sans arrêt complet",
+    "Avancer d'abord, s'arrêter ensuite si nécessaire",
+    "Angle mort → Avancer → Rétroviseurs"],a:0,en:"Stop, then continue when clear",
+ x:"Un arrêt complet veut dire : roues immobiles, pas seulement un ralentissement. On vérifie ensuite rétroviseurs et angle mort avant d'avancer."},
+{q:"L'examinateur dit : « Park in the spot ahead. » (stationnement perpendiculaire) Quelle est la séquence correcte ?",
+ o:["Signal → Rétroviseurs → Angle mort → Aligner le véhicule avec l'espace → Avancer tout droit et centré → Ajuster",
+    "Entrer directement dans l'espace sans ralentir",
+    "Reculer dans l'espace sans vérifier les angles morts",
+    "Signaler seulement une fois entré dans l'espace"],a:0,en:"Park in the spot ahead (perpendicular parking)",
+ x:"Pour un stationnement perpendiculaire en avançant, on s'aligne avec l'espace libre, on vérifie ses alentours, puis on avance lentement bien centré."},
+{q:"L'examinateur dit : « Make an emergency stop. » Quelle est la séquence correcte ?",
+ o:["Vérifier le rétroviseur → Freiner fermement et immédiatement → Garder le contrôle du volant",
+    "Freiner d'abord, vérifier le rétroviseur après",
+    "Tourner le volant brusquement pour éviter de freiner",
+    "Relâcher l'accélérateur seulement, sans freiner"],a:0,en:"Make an emergency stop",
+ x:"En arrêt d'urgence : freinage ferme et immédiat tout en gardant le contrôle du volant — le miroir est vérifié en une fraction de seconde, sans retarder le freinage."},
+{q:"L'examinateur dit : « Take the next exit. » (sur l'autoroute) Quelle est la séquence correcte ?",
+ o:["Rétroviseurs → Signal → Angle mort → Se positionner tôt dans la voie de sortie → Ralentir sur la bretelle",
+    "Ralentir directement sur l'autoroute avant de signaler",
+    "Signal → Ralentir sur l'autoroute → Rétroviseurs",
+    "Changer de voie sans signaler puisque c'est une sortie"],a:0,en:"Take the next exit",
+ x:"On se positionne tôt dans la voie de sortie (MSB), puis on ralentit seulement une fois sur la bretelle — jamais sur la voie principale de l'autoroute."},
+{q:"L'examinateur dit : « Merge into the right lane. » Quelle est la séquence correcte ?",
+ o:["Rétroviseurs → Signal → Angle mort → Ajuster la vitesse → Changer de voie",
+    "Changer de voie d'abord, signaler ensuite",
+    "Angle mort → Changer de voie → Signal",
+    "Accélérer fortement avant de vérifier quoi que ce soit"],a:0,en:"Merge into the right lane",
+ x:"Même consigne MSB que tout changement de voie : Mirror, Signal, Blind spot — toujours dans cet ordre, avant de bouger le volant."},
+{q:"L'examinateur dit : « Follow the curve to the left. » Un panneau à chevrons signale un virage prononcé. Quelle est la séquence correcte ?",
+ o:["Ralentir avant d'entrer dans la courbe → Maintenir une trajectoire régulière → Ne pas freiner dans la courbe",
+    "Accélérer dans la courbe pour la négocier plus vite",
+    "Freiner brusquement au milieu de la courbe",
+    "Couper la courbe en empiétant sur la voie opposée"],a:0,en:"Follow the curve to the left (chevron alignment sign)",
+ x:"On ralentit AVANT la courbe, jamais pendant — freiner en pleine courbe peut faire déraper le véhicule."}
+];
+
+/* ================== PHASE 2 : ERREURS FRÉQUENTES ================== */
+const ERRORS_LIST=[
+["🔄","Angle mort oublié","Avant un virage ou un changement de voie — l'erreur la plus citée par les examinateurs DriveTest."],
+["🐌","Vitesse anormalement basse","Rouler nettement sous la limite affichée sans raison (ex. 40 km/h dans une zone de 50) est lu comme un manque de contrôle, pas comme de la prudence."],
+["↔️","Mauvaise voie de virage","Tourner de la voie de droite vers la voie de gauche (ou l'inverse) au lieu de la voie correspondante."],
+["🛑","Arrêt incomplet","Rouler encore, même très lentement, à un panneau d'arrêt ou un feu rouge — échec automatique fréquent."],
+["🅿️","Frein à main oublié","Ne pas engager le frein à main en stationnement, surtout en pente."],
+["👀","Contrôle arrière oublié","Reculer sans regarder par-dessus l'épaule droite, en se fiant seulement au rétroviseur."],
+["🚸","Piéton non cédé","Ne pas céder complètement le passage à un passage pour piétons désigné (pedestrian crossover)."],
+["🔀","Changement de voie sans MSB","Changer de voie sans clignotant et/ou sans vérifier l'angle mort."],
+["🚌","Autobus scolaire","Ne pas s'arrêter à 20 m derrière un autobus scolaire dont les feux clignotent et le bras est déployé."],
+["📏","Distance de suivi trop courte","Rouler trop près du véhicule devant — mauvaise gestion de l'espace de sécurité."],
+["🎯","Fixation visuelle","Fixer un point plus de 2 secondes au lieu de balayer activement la route."],
+["🧭","Positionnement en approche","Ne pas se placer dans la bonne voie assez tôt avant un virage ou une sortie."]
+];
+const ERRORS_QUIZ=[
+{q:"Quelle est l'erreur la plus souvent citée comme cause d'échec à l'examen G2 ?",o:["Rouler trop vite","Angle mort oublié avant un virage ou changement de voie","Mauvaise musique dans l'auto","Mains mal placées sur le volant"],a:1,en:"Shoulder check",x:"L'angle mort oublié revient constamment dans les retours d'examinateurs — c'est LE réflexe à automatiser en priorité."},
+{q:"Rouler à 40 km/h dans une zone de 50 km/h, sans raison apparente, est perçu par l'examinateur comme :",o:["De la prudence à encourager","Un manque de contrôle du véhicule","Un geste écologique","Une bonne pratique en tout temps"],a:1,en:"Driving too slowly",x:"Rouler nettement sous la limite sans raison montre un manque de confiance/contrôle — presque aussi pénalisé qu'un excès de vitesse."},
+{q:"Un arrêt \"presque complet\" (roues qui bougent encore très lentement) à un panneau d'arrêt est :",o:["Accepté si c'est très lent","Toujours un échec potentiel — l'arrêt doit être complet","Accepté la nuit seulement","Accepté si personne n'approche"],a:1,en:"Incomplete stop",x:"L'arrêt doit être complet : roues immobiles. C'est l'une des erreurs qui entraîne le plus souvent un échec automatique."},
+{q:"En reculant pour stationner, vous devez :",o:["Vous fier uniquement au rétroviseur central","Regarder par-dessus l'épaule droite en plus des rétroviseurs","Utiliser seulement la caméra de recul si disponible","Reculer rapidement pour limiter le temps exposé"],a:1,en:"Look over the right shoulder while reversing",x:"Le contrôle par-dessus l'épaule droite est un point vérifié systématiquement à l'examen — le rétroviseur seul ne suffit pas."},
+{q:"À un passage pour piétons désigné (pedestrian crossover), vous devez repartir :",o:["Dès que le piéton dépasse le capot","Après que le piéton a complètement traversé la chaussée","Après 3 secondes","Quand le piéton atteint le milieu"],a:1,en:"Wait for full crossing",x:"On attend que le piéton ait ENTIÈREMENT traversé — repartir avant est une erreur grave et fréquente."},
+{q:"Changer de voie sans clignotant, même si la voie est libre, est considéré comme :",o:["Sans conséquence si personne n'est gêné","Une erreur — le clignotant communique l'intention, peu importe le trafic","Acceptable sur une route peu fréquentée","Acceptable si c'est rapide"],a:1,en:"Signal every lane change",x:"Le clignotant sert à communiquer, pas seulement à \"prévenir un danger\" — il est requis à chaque changement de voie, même sans trafic visible."},
+{q:"Vous approchez d'un autobus scolaire arrêté, feux clignotants et bras déployé. Vous devez :",o:["Passer lentement si vous roulez en sens inverse sur une route à 4 voies divisée","Vous arrêter à 20 mètres derrière lui (ou en face, selon le type de route)","Klaxonner et continuer","Attendre seulement si des enfants sont visibles"],a:1,en:"School bus stop — 20 metres",x:"20 m d'arrêt obligatoire, dans la plupart des cas même en sens inverse — une des règles les plus strictement vérifiées."},
+{q:"Fixer un point de la route plus de 2 secondes sans balayer le regard ailleurs s'appelle :",o:["Une bonne concentration","Une fixation visuelle — un risque, car vous cessez de surveiller le reste de la scène","Une technique recommandée en ville","Une pratique encouragée la nuit"],a:1,en:"Visual fixation",x:"La fixation visuelle empêche de détecter les dangers périphériques — l'examinateur observe si votre regard balaie activement."},
+{q:"Pour un virage, se positionner dans la bonne voie doit se faire :",o:["Au moment même du virage","Suffisamment tôt en approchant de l'intersection","Seulement si un autre véhicule est présent","Après avoir signalé, jamais avant"],a:1,en:"Position early",x:"Un mauvais positionnement tardif force des corrections brusques — se placer tôt dans la voie correspondante est attendu dès l'approche."}
+];
+
+/* ================== PHASE 2 : SÉQUENCES DE CONDUITE ================== */
+const SEQUENCES=[
+{t:"Avant de démarrer",ctx:"Vous montez dans le véhicule pour la première fois de la leçon. Placez les gestes dans le bon ordre, du premier au dernier.",
+ steps:[
+  {fr:"Ajuster le siège",en:"Adjust seat"},
+  {fr:"Ajuster les rétroviseurs",en:"Adjust mirrors"},
+  {fr:"Boucler la ceinture",en:"Fasten seatbelt"},
+  {fr:"Vérifier que le frein à main est engagé",en:"Check parking brake"},
+  {fr:"Démarrer le moteur",en:"Start engine"},
+  {fr:"Vérifier les alentours immédiats",en:"Check surroundings"},
+  {fr:"Signaler si nécessaire pour sortir",en:"Signal if needed"},
+  {fr:"Vérifier l'angle mort",en:"Shoulder check"},
+  {fr:"Relâcher le frein et partir",en:"Release brake and go"}
+ ]},
+{t:"Changement de voie (MSB)",ctx:"L'examinateur dit : « Change lanes to the left. » Reconstituez la séquence MSB.",
+ steps:[
+  {fr:"Vérifier les rétroviseurs",en:"Check mirrors"},
+  {fr:"Signaler",en:"Signal"},
+  {fr:"Vérifier l'angle mort",en:"Shoulder check"},
+  {fr:"Changer de voie",en:"Change lane"}
+ ]},
+{t:"Virage à une intersection",ctx:"L'examinateur dit : « Turn left at the lights. »",
+ steps:[
+  {fr:"Vérifier les rétroviseurs",en:"Check mirrors"},
+  {fr:"Signaler",en:"Signal"},
+  {fr:"Ralentir / ajuster la vitesse",en:"Adjust speed"},
+  {fr:"Vérifier l'angle mort",en:"Shoulder check"},
+  {fr:"Se positionner dans la voie correspondante",en:"Position in correct lane"},
+  {fr:"Balayer gauche-centre-droite-gauche",en:"Scan left-centre-right-left"},
+  {fr:"Compléter le virage",en:"Complete the turn"}
+ ]},
+{t:"Arrêt à un panneau stop",ctx:"Vous approchez d'un panneau d'arrêt sans feux de circulation.",
+ steps:[
+  {fr:"Vérifier les rétroviseurs",en:"Check mirrors"},
+  {fr:"Ralentir en approchant",en:"Slow down"},
+  {fr:"Arrêt complet à la ligne d'arrêt",en:"Stop completely"},
+  {fr:"Regarder à gauche",en:"Look left"},
+  {fr:"Regarder au centre",en:"Look centre"},
+  {fr:"Regarder à droite",en:"Look right"},
+  {fr:"Regarder à gauche à nouveau",en:"Look left again"},
+  {fr:"Avancer quand c'est sécuritaire",en:"Proceed when safe"}
+ ]},
+{t:"Stationnement parallèle",ctx:"L'examinateur dit : « Parallel park between the cones. »",
+ steps:[
+  {fr:"Signaler",en:"Signal"},
+  {fr:"Vérifier les rétroviseurs",en:"Check mirrors"},
+  {fr:"Vérifier l'angle mort",en:"Shoulder check"},
+  {fr:"Aligner son véhicule avec celui à l'avant",en:"Align with front vehicle"},
+  {fr:"Reculer lentement",en:"Reverse slowly"},
+  {fr:"Tourner le volant au bon moment",en:"Turn wheel at the right moment"},
+  {fr:"Redresser les roues",en:"Straighten wheels"},
+  {fr:"Ajuster la position finale",en:"Adjust final position"},
+  {fr:"Serrer le frein à main",en:"Apply parking brake"}
+ ]},
+{t:"Virage à trois points (K-turn)",ctx:"L'examinateur dit : « Make a three-point turn. »",
+ steps:[
+  {fr:"Vérifier qu'aucune circulation n'approche",en:"Check for approaching traffic"},
+  {fr:"Signaler",en:"Signal"},
+  {fr:"Vérifier l'angle mort",en:"Shoulder check"},
+  {fr:"Avancer en tournant le volant à droite",en:"Move forward turning wheel right"},
+  {fr:"S'arrêter près du trottoir opposé",en:"Stop near opposite curb"},
+  {fr:"Passer en marche arrière",en:"Shift to reverse"},
+  {fr:"Vérifier par-dessus l'épaule droite",en:"Look over right shoulder"},
+  {fr:"Reculer en tournant le volant à gauche",en:"Reverse turning wheel left"},
+  {fr:"Avancer pour compléter le virage",en:"Move forward to complete the turn"}
+ ]}
+];
+
+/* ================== PHASE 3 : PANNEAUX ROUTIERS ================== */
+const SIGNS=[
+{title:"Arrêt",en:"Stop",note:"Arrêt complet obligatoire, peu importe la circulation.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="30,14 70,14 90,34 90,66 70,86 30,86 10,66 10,34" fill="#D64545" stroke="#fff" stroke-width="3"/><text x="50" y="58" font-size="18" fill="#fff" text-anchor="middle" font-family="Inter" font-weight="900">STOP</text></svg>`},
+{title:"Céder le passage",en:"Yield",note:"Ralentir ou s'arrêter pour laisser passer la circulation prioritaire.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="15,20 85,20 50,85" fill="#fff" stroke="#D64545" stroke-width="6"/><text x="50" y="45" font-size="10" fill="#D64545" text-anchor="middle" font-family="Inter" font-weight="800">CÉDER</text></svg>`},
+{title:"Sens interdit",en:"Do Not Enter",note:"Interdiction totale d'entrer dans cette voie.",
+ svg:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#D64545" stroke="#fff" stroke-width="3"/><rect x="20" y="43" width="60" height="14" fill="#fff"/></svg>`},
+{title:"Passage pour piétons",en:"Pedestrian Crossing",note:"Zone de traverse — priorité totale au piéton.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill="#F5D93A" stroke="#101B2D" stroke-width="2"/><circle cx="45" cy="38" r="6" fill="#101B2D"/><line x1="45" y1="46" x2="45" y2="68" stroke="#101B2D" stroke-width="5"/><line x1="45" y1="52" x2="30" y2="60" stroke="#101B2D" stroke-width="4"/><line x1="45" y1="52" x2="58" y2="58" stroke="#101B2D" stroke-width="4"/><line x1="45" y1="68" x2="35" y2="85" stroke="#101B2D" stroke-width="4"/><line x1="45" y1="68" x2="55" y2="85" stroke="#101B2D" stroke-width="4"/></svg>`},
+{title:"Zone scolaire",en:"School Zone",note:"Vitesse réduite, redoublez de prudence — enfants à proximité.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="50,6 90,38 76,92 24,92 10,38" fill="#CFE83A" stroke="#101B2D" stroke-width="2"/><circle cx="42" cy="45" r="6" fill="#101B2D"/><circle cx="60" cy="48" r="5" fill="#101B2D"/><text x="50" y="80" font-size="9" fill="#101B2D" text-anchor="middle" font-family="Inter" font-weight="800">ÉCOLE</text></svg>`},
+{title:"Passage à niveau",en:"Railway Crossing",note:"Ralentir, regarder et écouter avant de traverser.",
+ svg:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="#fff" stroke="#D64545" stroke-width="3"/><text x="50" y="62" font-size="30" fill="#D64545" text-anchor="middle" font-family="Inter" font-weight="900">X</text></svg>`},
+{title:"Limite de vitesse",en:"Speed Limit",note:"Vitesse maximale autorisée sur ce tronçon.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="15" y="10" width="70" height="80" rx="6" fill="#fff" stroke="#101B2D" stroke-width="4"/><text x="50" y="55" font-size="26" fill="#101B2D" text-anchor="middle" font-family="Archivo" font-weight="900">50</text><text x="50" y="74" font-size="10" fill="#101B2D" text-anchor="middle" font-family="Inter">km/h</text></svg>`},
+{title:"Sens unique",en:"One Way",note:"Circulation autorisée dans une seule direction.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="10" y="30" width="80" height="40" rx="4" fill="#101B2D" stroke="#fff" stroke-width="2"/><polygon points="30,50 60,38 60,46 78,46 78,54 60,54 60,62" fill="#fff"/></svg>`},
+{title:"Demi-tour interdit",en:"No U-Turn",note:"Interdiction de faire demi-tour à cet endroit.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="6" fill="#fff" stroke="#101B2D" stroke-width="3"/><path d="M35 65 V40 a15 15 0 0 1 30 0 v15" fill="none" stroke="#101B2D" stroke-width="5"/><polygon points="55,55 65,55 60,68" fill="#101B2D"/><line x1="15" y1="85" x2="85" y2="15" stroke="#D64545" stroke-width="5"/></svg>`},
+{title:"Fin de la route",en:"Road Ends",note:"La route se termine devant — préparez-vous à tourner.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill="#F5D93A" stroke="#101B2D" stroke-width="2"/><path d="M30 65 V45 H60" fill="none" stroke="#101B2D" stroke-width="6"/><polygon points="60,38 60,52 72,45" fill="#101B2D"/></svg>`},
+{title:"Chaussée glissante",en:"Slippery Road",note:"Risque de perte d'adhérence — ralentissez, surtout par temps humide ou froid.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill="#F5D93A" stroke="#101B2D" stroke-width="2"/><path d="M25 65 Q50 40 75 65" fill="none" stroke="#101B2D" stroke-width="4" stroke-dasharray="2 4"/><rect x="38" y="42" width="24" height="14" rx="3" fill="#101B2D"/></svg>`},
+{title:"Travaux routiers",en:"Road Work",note:"Zone de construction — ralentissez, attention aux travailleurs.",
+ svg:`<svg viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill="#E8871E" stroke="#101B2D" stroke-width="2"/><circle cx="50" cy="35" r="7" fill="#101B2D"/><line x1="50" y1="42" x2="50" y2="65" stroke="#101B2D" stroke-width="5"/><line x1="50" y1="48" x2="35" y2="58" stroke="#101B2D" stroke-width="4"/><line x1="50" y1="48" x2="65" y2="42" stroke="#101B2D" stroke-width="4"/><line x1="50" y1="65" x2="40" y2="82" stroke="#101B2D" stroke-width="4"/><line x1="50" y1="65" x2="62" y2="82" stroke="#101B2D" stroke-width="4"/></svg>`},
+{title:"Voie réservée aux autobus",en:"Transit / Bus Lane",note:"Losange + pictogramme d'autobus : voie réservée au transport en commun (parfois taxis/covoiturage aussi).",
+ svg:`<svg viewBox="0 0 100 100"><rect x="10" y="6" width="80" height="88" rx="4" fill="#fff" stroke="#101B2D" stroke-width="3"/><polygon points="50,14 58,22 50,30 42,22" fill="none" stroke="#101B2D" stroke-width="3"/><rect x="32" y="40" width="36" height="20" rx="3" fill="#101B2D"/><circle cx="40" cy="62" r="4" fill="#101B2D"/><circle cx="60" cy="62" r="4" fill="#101B2D"/><polygon points="50,72 42,84 58,84" fill="#101B2D"/></svg>`},
+{title:"Signal de transport en commun",en:"Transit Signal",note:"Feu distinct qui ne s'adresse qu'aux autobus/tramways — les autres conducteurs doivent l'ignorer et suivre le feu normal.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="6" y="30" width="88" height="40" rx="4" fill="#fff" stroke="#101B2D" stroke-width="3"/><text x="50" y="48" font-size="10" fill="#101B2D" text-anchor="middle" font-family="Inter" font-weight="800">TRANSIT</text><text x="50" y="62" font-size="10" fill="#101B2D" text-anchor="middle" font-family="Inter" font-weight="800">SIGNAL</text></svg>`},
+{title:"Panneau d'alignement (chevrons)",en:"Chevron Alignment Sign",note:"Flèches noires sur fond jaune indiquant la direction et la sévérité d'une courbe à venir — ralentissez avant, pas pendant.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="20" y="4" width="60" height="92" rx="4" fill="#F5D93A" stroke="#101B2D" stroke-width="2"/><polyline points="30,20 50,35 70,20" fill="none" stroke="#101B2D" stroke-width="6"/><polyline points="30,45 50,60 70,45" fill="none" stroke="#101B2D" stroke-width="6"/><polyline points="30,70 50,85 70,70" fill="none" stroke="#101B2D" stroke-width="6"/></svg>`},
+{title:"Voie de droite — sauf autobus",en:"Right Lane, Buses Excepted",note:"La voie de droite a une restriction de virage/usage qui ne s'applique pas aux autobus.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="8" y="4" width="84" height="30" rx="4" fill="#fff" stroke="#101B2D" stroke-width="3"/><path d="M30 26 Q40 10 60 10 L60 4 L74 14 L60 24 L60 18 Q46 18 40 30" fill="none" stroke="#101B2D" stroke-width="4"/><rect x="8" y="38" width="84" height="24" rx="3" fill="#fff" stroke="#101B2D" stroke-width="2"/><text x="50" y="54" font-size="9" fill="#101B2D" text-anchor="middle" font-family="Inter" font-weight="800">RIGHT LANE</text><rect x="8" y="66" width="84" height="28" rx="3" fill="#101B2D"/><text x="50" y="84" font-size="8" fill="#fff" text-anchor="middle" font-family="Inter" font-weight="800">BUSES EXCEPTED</text></svg>`},
+{title:"Flèche de virage obligatoire",en:"Mandatory Direction Arrow",note:"Indique que cette voie mène obligatoirement dans la direction montrée — souvent au-dessus d'une voie de virage.",
+ svg:`<svg viewBox="0 0 100 100"><rect x="8" y="8" width="84" height="60" rx="4" fill="#101B2D" stroke="#fff" stroke-width="3"/><path d="M30 50 Q30 25 55 25 L55 15 L75 32 L55 49 L55 39 Q40 39 40 50" fill="none" stroke="#fff" stroke-width="5"/></svg>`}
+];
+
+/* ================== PHASE 3 : SCÉNARIOS VISUELS ==================
+   Même format qu'un quiz normal (q,o,a,en,x) + un champ svg optionnel,
+   affiché au-dessus de la question par renderQ(). */
+const SCENARIOS=[
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Arrêt toutes directions — un piéton attend au coin</text><rect x="110" y="0" width="80" height="320" fill="#0C1524"/><rect x="0" y="140" width="300" height="60" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><line x1="0" y1="170" x2="300" y2="170" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><polygon points="185,110 200,120 200,140 185,150 170,140 170,120" fill="#D64545" stroke="#fff" stroke-width="2"/><text x="185" y="133" font-size="7" fill="#fff" text-anchor="middle" font-family="Inter" font-weight="800">STOP</text><text x="80" y="180" font-size="28" text-anchor="middle">🚶</text><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous arrivez à cet arrêt toutes directions. Un piéton attend au coin pour traverser devant vous. Que faites-vous ?",
+ o:["Klaxonner pour avancer plus vite","Arrêt complet, puis céder le passage au piéton avant d'avancer","Avancer si le piéton n'a pas encore mis un pied sur la chaussée","Continuer sans s'arrêter si aucun véhicule n'approche"],a:1,en:"4-way stop, pedestrian waiting",
+ x:"Arrêt obligatoire, puis priorité au piéton qui s'apprête à traverser — même sans passage marqué à une intersection toutes directions."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Autobus scolaire arrêté devant vous, feux clignotants</text><rect x="110" y="0" width="80" height="320" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><text x="150" y="112" font-size="36" text-anchor="middle">🚌</text><text x="118" y="95" font-size="14" text-anchor="middle">🔴</text><text x="182" y="95" font-size="14" text-anchor="middle">🔴</text><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous roulez et apercevez un autobus scolaire arrêté devant vous, feux rouges clignotants et bras d'arrêt déployé. Que faites-vous ?",
+ o:["Dépasser lentement par la gauche","Vous arrêter à au moins 20 mètres derrière et attendre","Klaxonner et attendre 5 secondes avant de dépasser","Continuer si aucun enfant n'est visible"],a:1,en:"School bus stopped ahead, flashing lights",
+ x:"Arrêt obligatoire à 20 m derrière l'autobus tant que les feux clignotent — même si vous ne voyez aucun enfant."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Panneau Céder devant vous — véhicule arrivant de la droite</text><rect x="110" y="0" width="80" height="320" fill="#0C1524"/><rect x="150" y="140" width="150" height="60" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="170" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><line x1="150" y1="170" x2="300" y2="170" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><polygon points="150,110 175,150 125,150" fill="#fff" stroke="#D64545" stroke-width="4"/><text x="150" y="135" font-size="7" fill="#D64545" text-anchor="middle" font-family="Inter" font-weight="800">CÉDER</text><text x="255" y="180" font-size="30" text-anchor="middle">🚙</text><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous approchez de ce panneau de cédez le passage, sur une route secondaire. Un véhicule arrive de la route principale à votre droite. Que faites-vous ?",
+ o:["Accélérer pour passer avant lui","Ralentir ou vous arrêter si nécessaire pour le laisser passer","Klaxonner pour qu'il ralentisse","Avancer normalement, il doit vous céder le passage"],a:1,en:"Yield sign ahead, vehicle approaching from the right",
+ x:"Au panneau Céder, vous devez laisser passer la circulation de la route principale — ralentir ou vous arrêter si nécessaire."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Passage à niveau devant vous — aucun train visible</text><rect x="110" y="0" width="80" height="320" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><line x1="90" y1="120" x2="210" y2="120" stroke="#7E93B5" stroke-width="4"/><line x1="90" y1="140" x2="210" y2="140" stroke="#7E93B5" stroke-width="4"/><line x1="100" y1="110" x2="90" y2="150" stroke="#40506B" stroke-width="4"/><line x1="130" y1="110" x2="120" y2="150" stroke="#40506B" stroke-width="4"/><line x1="160" y1="110" x2="150" y2="150" stroke="#40506B" stroke-width="4"/><line x1="190" y1="110" x2="180" y2="150" stroke="#40506B" stroke-width="4"/><circle cx="150" cy="80" r="22" fill="#fff"/><text x="150" y="90" font-size="22" text-anchor="middle" fill="#D64545" font-weight="900">X</text><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous approchez de ce passage à niveau. Aucun train n'est visible ni entendu, et aucun signal n'est actif. Que faites-vous ?",
+ o:["Accélérer pour traverser rapidement","Ralentir, regarder et écouter des deux côtés avant de traverser","Vous arrêter complètement, comme un autobus scolaire","Klaxonner en traversant"],a:1,en:"Railway crossing ahead, no train visible",
+ x:"Sauf obligation spécifique à certains véhicules, on ralentit, regarde et écoute avant de traverser — l'arrêt complet n'est requis que si un signal est actif."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Vous approchez du rond-point</text><rect x="110" y="140" width="80" height="180" fill="#0C1524"/><line x1="150" y1="140" x2="150" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><circle cx="150" cy="110" r="55" fill="none" stroke="#2C3E5E" stroke-width="16"/><circle cx="150" cy="110" r="24" fill="#0C1524"/><text x="188" y="90" font-size="24" text-anchor="middle">🚙</text><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous approchez de ce carrefour giratoire (rond-point). Que faites-vous en entrant ?",
+ o:["Vous engager directement sans céder","Céder le passage aux véhicules déjà engagés dans le rond-point, puis entrer quand c'est libre","Vous arrêter complètement avant d'entrer, peu importe la circulation","Signaler seulement en sortant, jamais en entrant"],a:1,en:"Roundabout entry",
+ x:"On cède le passage à la circulation déjà dans le rond-point (venant de la gauche) et on signale en sortant."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Vous reculez de votre espace, un piéton marche dans l'allée</text><rect x="60" y="40" width="180" height="90" fill="#0C1524"/><line x1="110" y1="40" x2="110" y2="130" stroke="#2C3E5E" stroke-width="2"/><line x1="150" y1="40" x2="150" y2="130" stroke="#2C3E5E" stroke-width="2"/><line x1="190" y1="40" x2="190" y2="130" stroke="#2C3E5E" stroke-width="2"/><text x="130" y="95" font-size="30" text-anchor="middle">🚗</text><text x="130" y="113" font-size="9" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text><text x="130" y="150" font-size="18" text-anchor="middle">⬇️</text><rect x="30" y="170" width="240" height="20" fill="#0C1524"/><line x1="30" y1="180" x2="270" y2="180" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><text x="200" y="192" font-size="28" text-anchor="middle">🚶</text></svg>`,
+ q:"Vous reculez pour sortir d'un espace de stationnement. Un piéton marche dans l'allée derrière vous. Que faites-vous ?",
+ o:["Continuer à reculer lentement, le piéton doit vous éviter","Vous arrêter et attendre que le piéton soit dégagé avant de continuer","Klaxonner et continuer","Avancer plutôt que reculer pour l'éviter"],a:1,en:"Reversing out of a spot, pedestrian in the lane",
+ x:"En reculant, le conducteur est responsable d'éviter tout usager — on s'arrête et on attend que la voie soit dégagée."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Feu rouge — panneau "interdit de tourner à droite au feu rouge"</text><rect x="110" y="0" width="80" height="320" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><circle cx="150" cy="90" r="14" fill="#D64545"/><rect x="195" y="70" width="70" height="40" rx="4" fill="#fff" stroke="#101B2D" stroke-width="2"/><path d="M215 100 Q215 82 235 82" fill="none" stroke="#101B2D" stroke-width="4"/><polygon points="235,75 235,89 247,82" fill="#101B2D"/><line x1="200" y1="105" x2="260" y2="75" stroke="#D64545" stroke-width="4"/><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous êtes arrêté à ce feu rouge et voulez tourner à droite. Un panneau indique qu'il est interdit de tourner à droite au feu rouge. Que faites-vous ?",
+ o:["Tourner quand même si la voie est libre","Attendre le feu vert avant de tourner","Klaxonner et tourner","Reculer pour changer de voie"],a:1,en:"No turn on red sign",
+ x:"Quand un panneau l'interdit explicitement, le virage à droite au feu rouge n'est PAS permis, même si la voie est libre — il faut attendre le feu vert."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Panneau "virage à gauche interdit"</text><rect x="110" y="0" width="80" height="320" fill="#0C1524"/><rect x="0" y="140" width="190" height="60" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><line x1="0" y1="170" x2="150" y2="170" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><circle cx="150" cy="90" r="24" fill="#fff" stroke="#D64545" stroke-width="3"/><path d="M165 100 Q140 100 140 80" fill="none" stroke="#101B2D" stroke-width="4"/><polygon points="133,73 147,73 140,86" fill="#101B2D"/><line x1="130" y1="105" x2="170" y2="75" stroke="#D64545" stroke-width="4"/><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Ce panneau est affiché à l'intersection que vous approchez. Vous vouliez tourner à gauche. Que faites-vous ?",
+ o:["Tourner à gauche rapidement avant que quelqu'un ne le remarque","Continuer tout droit ou choisir un autre itinéraire — le virage à gauche est interdit ici","Tourner à gauche si aucun véhicule n'approche","Faire un demi-tour à la place"],a:1,en:"No left turn sign",
+ x:"Un panneau d'interdiction de virage s'applique en tout temps sauf indication contraire (ex. plage horaire affichée) — il faut trouver un autre chemin."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Virage à gauche vers une route à deux voies</text><rect x="90" y="0" width="120" height="150" fill="#0C1524"/><line x1="150" y1="0" x2="150" y2="150" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><rect x="0" y="90" width="300" height="60" fill="#0C1524"/><line x1="0" y1="105" x2="300" y2="105" stroke="#40506B" stroke-width="1.5"/><line x1="0" y1="120" x2="300" y2="120" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><line x1="0" y1="135" x2="300" y2="135" stroke="#40506B" stroke-width="1.5"/><path d="M150 235 Q150 130 60 110" fill="none" stroke="#F5B301" stroke-width="3" stroke-dasharray="6 5"/><polygon points="60,110 74,112 68,124" fill="#F5B301"/><text x="150" y="270" font-size="34" text-anchor="middle">🚗</text><text x="150" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous tournez à gauche à ce feu, vers une route à deux voies dans votre direction. Dans quelle voie devez-vous arriver après le virage, avant de fusionner vers la droite si nécessaire ?",
+ o:["Directement dans la voie de droite","Dans la voie la plus proche de votre virage (voie de gauche), puis fusionner vers la droite si votre destination l'exige","Peu importe la voie, du moment que vous tournez","Dans la voie du milieu s'il y en a une"],a:1,en:"Left turn — correct lane on exit",
+ x:"Un virage à gauche doit arriver dans la voie la plus proche du côté d'où vous tournez (généralement la voie de gauche) — on fusionne ensuite vers la droite seulement après avoir complété le virage, avec MSB."},
+{svg:`<svg viewBox="0 0 300 320"><rect width="300" height="320" fill="#16233B" rx="14"/><text x="150" y="20" font-size="9" fill="#9AA7BC" text-anchor="middle" font-family="Inter">Bretelle d'accès — circulation de l'autoroute à gauche</text><rect x="130" y="30" width="60" height="290" fill="#0C1524"/><line x1="160" y1="30" x2="160" y2="320" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="10 8"/><path d="M40 320 Q40 150 130 90" fill="none" stroke="#0C1524" stroke-width="55" stroke-linecap="round"/><text x="90" y="130" font-size="26" text-anchor="middle">🚙</text><text x="160" y="270" font-size="34" text-anchor="middle">🚗</text><polygon points="150,235 144,248 156,248" fill="#F5B301"/><text x="160" y="300" font-size="10" fill="#F5B301" text-anchor="middle" font-family="Inter" font-weight="800">VOUS</text></svg>`,
+ q:"Vous êtes sur la bretelle d'accès et voyez la circulation de l'autoroute à votre gauche. Que faites-vous avant de vous insérer ?",
+ o:["Vous arrêter au bout de la bretelle pour attendre un espace","Accélérer pour atteindre la vitesse de la circulation, puis vérifier l'angle mort et signaler avant de vous insérer","Vous insérer immédiatement, peu importe votre vitesse","Rouler à vitesse réduite jusqu'à trouver un grand espace"],a:1,en:"Highway on-ramp merge",
+ x:"On utilise la bretelle pour atteindre la vitesse de la circulation avant de s'insérer — s'arrêter ou rouler trop lentement force les autres à manœuvrer dangereusement."}
+];
+
+/* ================== PHASE 3 : PROGRESSION & BADGES ================== */
+const CATEGORIES=[
+ {icon:"🚦",label:"Signalisation",pct:sc=>sc['m2']!==undefined?sc['m2']/5*100:0},
+ {icon:"🔀",label:"Intersections",pct:sc=>sc['m6']!==undefined?sc['m6']/5*100:0},
+ {icon:"🛣️",label:"Autoroute",pct:sc=>sc['m9']!==undefined?sc['m9']/7*100:0},
+ {icon:"👀",label:"Observation",pct:sc=>sc['m4']!==undefined?sc['m4']/5*100:0},
+ {icon:"🅿️",label:"Stationnement",pct:sc=>{const a=sc['seq4'],b=sc['seq5'];if(a===undefined&&b===undefined)return 0;return((a||0)+(b||0))/((a!==undefined&&b!==undefined)?2:1);}},
+ {icon:"🎓",label:"Examinateur",pct:sc=>sc['examiner']!==undefined?sc['examiner']/15*100:0}
+];
+function starsFor(pct){if(pct<=0)return 0;return Math.min(5,Math.max(1,Math.ceil(pct/20)));}
+const BADGES=[
+ {icon:"🏆",label:"Maître des panneaux",check:sc=>(sc['m2']||0)>=4},
+ {icon:"🏆",label:"Expert intersections",check:sc=>(sc['m6']||0)>=4},
+ {icon:"🏆",label:"As de l'autoroute",check:sc=>(sc['m9']||0)>=6},
+ {icon:"🏆",label:"Maître du stationnement",check:sc=>(sc['seq4']||0)>=80&&(sc['seq5']||0)>=80},
+ {icon:"🏆",label:"Prêt pour l'examen",check:sc=>(sc['examiner']||0)>=11},
+ {icon:"🏆",label:"Sans-faute",check:sc=>(sc['errorsq']||0)>=7}
+];
+
+/* ================== ÉTAT ================== */
+let cur={qs:[],i:0,score:0,mi:-1,isFinal:false,isExpress:false,isReview:false,isExaminer:false,isErrorsQuiz:false,isScenarios:false,missed:[]};
+
+function show(id){
+  ['login','home','quiz','results','lexique','vehicule','sequences','seqPlay','errors','signs','progression'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({top:0});
+}
+function getScores(){try{return JSON.parse(store.get('fr_scores')||'{}')}catch(e){return{}}}
+function setScore(k,v){const s=getScores();if(!(k in s)||v>s[k])s[k]=v;store.set('fr_scores',JSON.stringify(s));}
+
+function buildHome(){
+  const g=document.getElementById('modGrid');g.innerHTML='';
+  const sc=getScores();
+  MODULES.forEach((m,i)=>{
+    const done=sc['m'+i]!==undefined&&sc['m'+i]>=4;
+    const b=document.createElement('button');
+    b.className='mod'+(done?' done':'');
+    b.innerHTML=`<span class="num">${done?'✓':String(i+1).padStart(2,'0')}</span>
+      <span><h3>${m.t}</h3><p>${m.qs.length} questions</p></span>
+      ${sc['m'+i]!==undefined?`<span class="score">${sc['m'+i]}/5</span>`:''}`;
+    b.onclick=()=>startModule(i);
+    g.appendChild(b);
+  });
+  const eg=document.getElementById('expressGrid');eg.innerHTML='';
+  EXPRESS_MODS.forEach(i=>{
+    const done=sc['m'+i]!==undefined&&sc['m'+i]>=4;
+    const b=document.createElement('button');
+    b.className='mod'+(done?' done':'');
+    b.innerHTML=`<span class="num">${done?'✓':String(i+1).padStart(2,'0')}</span>
+      <span><h3>${MODULES[i].t}</h3><p>5 questions</p></span>`;
+    b.onclick=()=>startModule(i);
+    eg.appendChild(b);
+  });
+  refreshHome();
+}
+function refreshHome(){
+  const sc=getScores();
+  let done=0,tot=0,n=0;
+  MODULES.forEach((m,i)=>{if(sc['m'+i]!==undefined){n++;tot+=sc['m'+i];if(sc['m'+i]>=4)done++;}});
+  document.getElementById('stDone').textContent=done+'/20';
+  document.getElementById('stAvg').textContent=n?Math.round(tot/n/5*100)+' %':'—';
+  document.getElementById('stFinal').textContent=sc['final']!==undefined?sc['final']+'/20':'—';
+  const ex=document.getElementById('stExpress');
+  if(ex)ex.textContent=sc['express']!==undefined?'· Meilleur : '+sc['express']+'/20':'';
+  const exam=document.getElementById('stExaminer');
+  if(exam)exam.textContent=sc['examiner']!==undefined?'· Meilleur : '+sc['examiner']+'/15':'';
+  const errq=document.getElementById('stErrors');
+  if(errq)errq.textContent=sc['errorsq']!==undefined?'· Meilleur : '+sc['errorsq']+'/8':'';
+  const scen=document.getElementById('stScenarios');
+  if(scen)scen.textContent=sc['scenarios']!==undefined?'· Meilleur : '+sc['scenarios']+'/10':'';
+  buildHomeGridScores();
+  renderNiveauBanner();
+}
+/* ================== NIVEAU / PARCOURS GUIDÉ ================== */
+function setNiveau(v){store.set('fr_niveau',v);renderNiveauBanner();}
+function renderNiveauBanner(){
+  const v=store.get('fr_niveau');
+  document.getElementById('btnDebutant').classList.toggle('active',v==='debutant');
+  document.getElementById('btnExperimente').classList.toggle('active',v==='experimente');
+  const b=document.getElementById('niveauBanner');
+  if(!v){b.classList.add('hidden');return;}
+  b.classList.remove('hidden');
+  if(v==='debutant'){
+    b.innerHTML=`🌱 <b>Votre parcours recommandé :</b> commencez par le <b>Module 0</b> (découverte du véhicule), puis les <b>Modules 1 à 20</b> dans l'ordre. Passez à la Phase 2 (séquences, simulateur) une fois les modules de base maîtrisés.
+      <div class="navrow"><button class="btn small" onclick="show('vehicule');vhScene(0)">Aller au Module 0 →</button></div>`;
+  } else {
+    b.innerHTML=`🚗 <b>Votre parcours recommandé :</b> commencez par le <b>Test Express</b> et le <b>Simulateur examinateur</b>, puis consultez les <b>Erreurs fréquentes</b>. Utilisez les modules de base seulement pour combler une lacune précise.
+      <div class="navrow"><button class="btn small" onclick="startExpress()">Test Express</button><button class="btn small" onclick="startExaminer()">Simulateur examinateur</button></div>`;
+  }
+}
+/* ================== PANNEAUX ROUTIERS ================== */
+(function(){
+  const g=document.getElementById('signGrid');
+  SIGNS.forEach(s=>{
+    const d=document.createElement('div');d.className='signcard';
+    d.innerHTML=`${s.svg}<h4>${s.title}</h4><span class="en">🇬🇧 ${s.en}</span><p>${s.note}</p>`;
+    g.appendChild(d);
+  });
+})();
+/* ================== PROGRESSION & BADGES ================== */
+function renderProgression(){
+  const sc=getScores();
+  const cl=document.getElementById('catList');cl.innerHTML='';
+  CATEGORIES.forEach(c=>{
+    const pct=c.pct(sc);
+    const n=starsFor(pct);
+    const row=document.createElement('div');row.className='catrow';
+    row.innerHTML=`<span class="cicon">${c.icon}</span><span class="clabel">${c.label}</span><span class="stars">${'⭐'.repeat(n)}${'☆'.repeat(5-n)}</span>`;
+    cl.appendChild(row);
+  });
+  const bg=document.getElementById('badgeGrid');bg.innerHTML='';
+  BADGES.forEach(b=>{
+    const unlocked=b.check(sc);
+    const d=document.createElement('div');d.className='badge'+(unlocked?' unlocked':'');
+    d.innerHTML=`<span class="bicon">${unlocked?b.icon:'🔒'}</span><h4>${b.label}</h4>`;
+    bg.appendChild(d);
+  });
+}
+function buildHomeGridScores(){
+  const g=document.getElementById('modGrid');
+  if(!g.children.length)return;
+  const sc=getScores();
+  [...g.children].forEach((b,i)=>{
+    const done=sc['m'+i]!==undefined&&sc['m'+i]>=4;
+    b.className='mod'+(done?' done':'');
+    b.querySelector('.num').textContent=done?'✓':String(i+1).padStart(2,'0');
+    let sEl=b.querySelector('.score');
+    if(sc['m'+i]!==undefined){if(!sEl){sEl=document.createElement('span');sEl.className='score';b.appendChild(sEl);}sEl.textContent=sc['m'+i]+'/5';}
+  });
+}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function startModule(i){
+  cur={qs:MODULES[i].qs,i:0,score:0,mi:i,isFinal:false,isExpress:false,isReview:false,isExaminer:false,isErrorsQuiz:false,isScenarios:false,missed:[]};
+  document.getElementById('quizTitle').textContent='Module '+(i+1)+' — '+MODULES[i].t;
+  show('quiz');renderQ();
+}
+function startFinal(){
+  cur={qs:shuffle(FINAL),i:0,score:0,mi:-1,isFinal:true,isExpress:false,isReview:false,isExaminer:false,isErrorsQuiz:false,isScenarios:false,missed:[]};
+  document.getElementById('quizTitle').textContent='Test final blanc';
+  show('quiz');renderQ();
+}
+function startExpress(){
+  let pool=[];EXPRESS_MODS.forEach(i=>{pool=pool.concat(MODULES[i].qs)});
+  cur={qs:shuffle(pool).slice(0,20),i:0,score:0,mi:-1,isFinal:false,isExpress:true,isReview:false,isExaminer:false,isErrorsQuiz:false,isScenarios:false,missed:[]};
+  document.getElementById('quizTitle').textContent='Test Express Examen';
+  show('quiz');renderQ();
+}
+function startExaminer(){
+  cur={qs:shuffle(EXAMINER),i:0,score:0,mi:-1,isFinal:false,isExpress:false,isReview:false,isExaminer:true,isErrorsQuiz:false,isScenarios:false,missed:[]};
+  document.getElementById('quizTitle').textContent='Simulateur examinateur DriveTest';
+  show('quiz');renderQ();
+}
+function startErrorsQuiz(){
+  cur={qs:shuffle(ERRORS_QUIZ),i:0,score:0,mi:-1,isFinal:false,isExpress:false,isReview:false,isExaminer:false,isErrorsQuiz:true,isScenarios:false,missed:[]};
+  document.getElementById('quizTitle').textContent='Erreurs fréquentes — quiz';
+  show('quiz');renderQ();
+}
+function startScenarios(){
+  cur={qs:shuffle(SCENARIOS),i:0,score:0,mi:-1,isFinal:false,isExpress:false,isReview:false,isExaminer:false,isErrorsQuiz:false,isScenarios:true,missed:[]};
+  document.getElementById('quizTitle').textContent='Scénarios visuels';
+  show('quiz');renderQ();
+}
+/* Révision ciblée : uniquement les questions ratées lors de la dernière tentative */
+function startReview(qs,label){
+  cur={qs:shuffle(qs),i:0,score:0,mi:-1,isFinal:false,isExpress:false,isReview:true,isExaminer:false,isErrorsQuiz:false,isScenarios:false,missed:[],label};
+  document.getElementById('quizTitle').textContent='Révision — '+label;
+  show('quiz');renderQ();
+}
+/* Ordre des options mélangé à chaque affichage — sinon un élève qui refait
+   un module peut mémoriser "la bonne réponse est en position 2" au lieu
+   d'apprendre la notion. On garde une correspondance display->original. */
+let qOrder=[];
+function renderQ(){
+  const q=cur.qs[cur.i];
+  document.getElementById('quizCount').textContent='Question '+(cur.i+1)+' / '+cur.qs.length;
+  const pct=(cur.i/cur.qs.length)*100;
+  document.getElementById('roadFill').style.width=pct+'%';
+  document.getElementById('roadCar').style.left=Math.max(pct,2)+'%';
+  const img=document.getElementById('qImg');
+  if(q.svg){img.innerHTML=q.svg;img.classList.remove('hidden');}
+  else{img.innerHTML='';img.classList.add('hidden');}
+  document.getElementById('qText').textContent=q.q;
+  qOrder=shuffle(q.o.map((_,idx)=>idx));
+  const box=document.getElementById('qOpts');box.innerHTML='';
+  qOrder.forEach((origIdx,displayIdx)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=q.o[origIdx];
+    b.onclick=()=>answer(displayIdx,b);box.appendChild(b);
+  });
+  const fb=document.getElementById('qFb');fb.style.display='none';fb.className='feedback';
+  document.getElementById('nextBtn').classList.add('hidden');
+}
+function answer(displayIdx,btn){
+  const q=cur.qs[cur.i];
+  const correctDisplayIdx=qOrder.indexOf(q.a);
+  const opts=[...document.getElementById('qOpts').children];
+  opts.forEach(o=>o.disabled=true);
+  opts[correctDisplayIdx].classList.add('correct');
+  const ok=displayIdx===correctDisplayIdx;
+  if(ok)cur.score++;else{btn.classList.add('wrong');cur.missed.push(q);}
+  const fb=document.getElementById('qFb');
+  fb.className='feedback '+(ok?'ok':'ko');
+  fb.innerHTML=(ok?'✅ <b>Bonne réponse !</b> ':'❌ <b>Pas tout à fait.</b> ')+q.x+
+    (q.en?`<br><span class="enchip">🇬🇧 En anglais : ${q.en}</span>`:'');
+  fb.style.display='block';
+  const nb=document.getElementById('nextBtn');
+  nb.textContent=cur.i===cur.qs.length-1?'Voir mon résultat →':'Question suivante →';
+  nb.classList.remove('hidden');
+  nb.focus();
+}
+function nextQ(){
+  cur.i++;
+  if(cur.i<cur.qs.length)renderQ();
+  else finish();
+}
+function quizLabel(){
+  if(cur.isReview)return'Révision — '+cur.label;
+  if(cur.isFinal)return'Test final blanc';
+  if(cur.isExpress)return'Test Express Examen';
+  if(cur.isExaminer)return'Simulateur examinateur DriveTest';
+  if(cur.isErrorsQuiz)return'Erreurs fréquentes — quiz';
+  if(cur.isScenarios)return'Scénarios visuels';
+  return'Module '+(cur.mi+1)+' — '+MODULES[cur.mi].t;
+}
+function finish(){
+  const total=cur.qs.length;
+  const pass=(cur.isFinal||cur.isExpress)?15:(cur.isExaminer||cur.isErrorsQuiz||cur.isScenarios)?Math.ceil(total*0.7):Math.ceil(total*0.8);
+  if(cur.isReview){/* les révisions ne comptent pas dans les scores officiels */}
+  else if(cur.isFinal)setScore('final',cur.score);
+  else if(cur.isExpress)setScore('express',cur.score);
+  else if(cur.isExaminer)setScore('examiner',cur.score);
+  else if(cur.isErrorsQuiz)setScore('errorsq',cur.score);
+  else if(cur.isScenarios)setScore('scenarios',cur.score);
+  else setScore('m'+cur.mi,cur.score);
+  document.getElementById('resTitle').textContent=quizLabel();
+  document.getElementById('resScore').textContent=cur.score+' / '+total;
+  const pct=Math.round(cur.score/total*100);
+  document.getElementById('resFill').style.width=pct+'%';
+  document.getElementById('resVerdict').textContent=
+    cur.score>=pass?'🎉 Réussi ('+pct+' %) — vous maîtrisez ces notions. En route vers la suite !'
+    :'📖 '+pct+' % — relisez les explications et recommencez. Objectif : '+pass+'/'+total+'.';
+  const rb=document.getElementById('reviewBtn');
+  if(cur.missed.length){rb.classList.remove('hidden');rb.textContent='Réviser mes '+cur.missed.length+' erreur'+(cur.missed.length>1?'s':'')+' ✏️';}
+  else rb.classList.add('hidden');
+  show('results');
+}
+function reviewMissed(){
+  startReview(cur.missed,quizLabel().replace('Révision — ',''));
+}
+function retryQuiz(){
+  if(cur.isReview)startReview(cur.qs,cur.label);
+  else if(cur.isFinal)startFinal();
+  else if(cur.isExpress)startExpress();
+  else if(cur.isExaminer)startExaminer();
+  else if(cur.isErrorsQuiz)startErrorsQuiz();
+  else if(cur.isScenarios)startScenarios();
+  else startModule(cur.mi);
+}
+function confirmExit(){show('home');refreshHome();}
+
+/* Lexique */
+(function(){
+  const l=document.getElementById('lexList');
+  LEXIQUE.forEach(([en,fr,note])=>{
+    const d=document.createElement('div');d.className='lexrow';
+    d.innerHTML=`<b>${en}</b><span>${fr}<span class="lexnote">${note}</span></span>`;
+    l.appendChild(d);
+  });
+})();
+
+/* Erreurs fréquentes — liste de référence */
+(function(){
+  const l=document.getElementById('errList');
+  ERRORS_LIST.forEach(([icon,title,note])=>{
+    const d=document.createElement('div');d.className='errrow';
+    d.innerHTML=`<span class="ico">${icon}</span><span><b>${title}</b><span>${note}</span></span>`;
+    l.appendChild(d);
+  });
+})();
+
+/* ================== PHASE 2 : SÉQUENCES DE CONDUITE ================== */
+function seqHome(){
+  const g=document.getElementById('seqGrid');g.innerHTML='';
+  SEQUENCES.forEach((s,i)=>{
+    const b=document.createElement('button');b.className='mod';
+    b.innerHTML=`<span class="num">${String(i+1).padStart(2,'0')}</span>
+      <span><h3>${s.t}</h3><p>${s.steps.length} gestes à ordonner</p></span>`;
+    b.onclick=()=>openSeq(i);
+    g.appendChild(b);
+  });
+}
+let seqCur={si:-1,order:[],placed:[],pool:[]};
+function openSeq(i){
+  const s=SEQUENCES[i];
+  seqCur={si:i,order:s.steps.map((_,idx)=>idx),placed:[],pool:shuffle(s.steps.map((_,idx)=>idx))};
+  document.getElementById('seqTitle').textContent=(i+1)+'. '+s.t;
+  document.getElementById('seqContext').textContent=s.ctx;
+  document.getElementById('seqNextRow').classList.add('hidden');
+  document.getElementById('seqCheckBtn').classList.remove('hidden');
+  document.getElementById('seqUndoBtn').classList.remove('hidden');
+  document.getElementById('seqFb').style.display='none';
+  show('seqPlay');
+  seqRender();
+}
+function seqRender(){
+  const s=SEQUENCES[seqCur.si];
+  const bank=document.getElementById('seqBank');bank.innerHTML='';
+  seqCur.pool.forEach(stepIdx=>{
+    const b=document.createElement('button');b.className='seqbtn';
+    b.textContent=s.steps[stepIdx].fr;
+    b.disabled=seqCur.placed.includes(stepIdx);
+    b.onclick=()=>seqSelect(stepIdx);
+    bank.appendChild(b);
+  });
+  const ans=document.getElementById('seqAnswer');ans.innerHTML='';
+  seqCur.placed.forEach((stepIdx,pos)=>{
+    const c=document.createElement('span');c.className='seqchip';
+    c.innerHTML=`<span class="n">${pos+1}</span>${s.steps[stepIdx].fr}`;
+    ans.appendChild(c);
+  });
+}
+function seqSelect(stepIdx){
+  if(seqCur.placed.includes(stepIdx))return;
+  seqCur.placed.push(stepIdx);
+  seqRender();
+}
+function seqUndo(){
+  seqCur.placed.pop();
+  document.getElementById('seqFb').style.display='none';
+  document.getElementById('seqNextRow').classList.add('hidden');
+  document.getElementById('seqCheckBtn').classList.remove('hidden');
+  seqRender();
+}
+function seqCheck(){
+  const s=SEQUENCES[seqCur.si];
+  if(seqCur.placed.length<s.steps.length){
+    const fb=document.getElementById('seqFb');
+    fb.style.display='block';fb.className='feedback ko';
+    fb.innerHTML='Placez tous les gestes avant de vérifier ('+seqCur.placed.length+' / '+s.steps.length+').';
+    return;
+  }
+  let correctCount=0;
+  const ans=document.getElementById('seqAnswer');
+  [...ans.children].forEach((chip,pos)=>{
+    const ok=seqCur.placed[pos]===seqCur.order[pos];
+    chip.classList.add(ok?'ok':'ko');
+    if(ok)correctCount++;
+  });
+  const fb=document.getElementById('seqFb');
+  fb.style.display='block';
+  const pct=Math.round(correctCount/s.steps.length*100);
+  setScore('seq'+seqCur.si,pct);
+  if(correctCount===s.steps.length){
+    fb.className='feedback ok';
+    fb.innerHTML='🎉 <b>Séquence parfaite !</b> C\'est exactement l\'ordre attendu par l\'examinateur.';
+  } else {
+    fb.className='feedback ko';
+    const correctOrderTxt=s.steps.map(st=>st.fr).join(' → ');
+    fb.innerHTML='📖 <b>'+correctCount+' / '+s.steps.length+' bien placés ('+pct+' %).</b> Ordre correct : '+correctOrderTxt;
+  }
+  document.getElementById('seqCheckBtn').classList.add('hidden');
+  document.getElementById('seqUndoBtn').classList.add('hidden');
+  document.getElementById('seqNextRow').classList.remove('hidden');
+}
+function seqReset(){openSeq(seqCur.si);}
+function seqNext(){
+  const n=seqCur.si+1;
+  if(n>=SEQUENCES.length){show('sequences');seqHome();}
+  else openSeq(n);
+}
+
+/* ================== MODULE 0 : VÉHICULE ================== */
+const VH=[
+{t:"L'habitacle",svg:`<svg viewBox="0 0 420 300" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="420" height="300" fill="none"/>
+<polygon points="40,20 380,20 350,95 70,95" fill="#16233B" stroke="#4C6284" stroke-width="2"/>
+<text x="210" y="62" fill="#40506B" font-size="13" text-anchor="middle" font-family="Inter">PARE-BRISE / WINDSHIELD</text>
+<g class="part" data-p="retro"><rect class="fillable" x="180" y="26" width="60" height="18" rx="6" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/></g>
+<g class="part" data-p="retrog"><rect class="fillable" x="14" y="52" width="34" height="24" rx="5" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/></g>
+<g class="part" data-p="retrod"><rect class="fillable" x="372" y="52" width="34" height="24" rx="5" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/></g>
+<rect x="55" y="95" width="310" height="14" fill="#101B2D" stroke="#2C3E5E"/>
+<g class="part" data-p="volant"><circle class="fillable" cx="150" cy="175" r="58" fill="none" stroke="#7E93B5" stroke-width="9"/><circle class="fillable" cx="150" cy="175" r="16" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><line x1="150" y1="159" x2="150" y2="122" stroke="#7E93B5" stroke-width="6"/><line x1="136" y1="183" x2="99" y2="196" stroke="#7E93B5" stroke-width="6"/><line x1="164" y1="183" x2="201" y2="196" stroke="#7E93B5" stroke-width="6"/></g>
+<text x="150" y="252" fill="#40506B" font-size="10" text-anchor="middle" font-family="Inter">mains à 9 h et 3 h</text>
+<g class="part" data-p="embrayage"><rect class="fillable" x="96" y="262" width="26" height="30" rx="4" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="109" y="282" fill="#9AA7BC" font-size="11" text-anchor="middle" font-family="Inter">C</text></g>
+<g class="part" data-p="frein"><rect class="fillable" x="138" y="262" width="30" height="30" rx="4" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="153" y="282" fill="#9AA7BC" font-size="11" text-anchor="middle" font-family="Inter">B</text></g>
+<g class="part" data-p="accel"><rect class="fillable" x="184" y="256" width="20" height="38" rx="4" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="194" y="280" fill="#9AA7BC" font-size="11" text-anchor="middle" font-family="Inter">A</text></g>
+<g class="part" data-p="levier"><circle class="fillable" cx="300" cy="205" r="14" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><rect x="296" y="216" width="8" height="30" fill="#7E93B5"/><rect class="fillable" x="272" y="244" width="56" height="20" rx="6" fill="#16233B" stroke="#4C6284" stroke-width="2"/><text x="300" y="200" fill="#9AA7BC" font-size="8" text-anchor="middle" font-family="Inter">P R N D S L</text></g>
+<g class="part" data-p="freinmain"><rect class="fillable" x="345" y="215" width="14" height="46" rx="6" fill="#1F3050" stroke="#7E93B5" stroke-width="2" transform="rotate(24 352 238)"/></g>
+<g class="part" data-p="ceinture"><path class="fillable" d="M40 120 L95 265" stroke="#7E93B5" stroke-width="9" fill="none" stroke-linecap="round"/><rect class="fillable" x="82" y="235" width="20" height="14" rx="3" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/></g>
+</svg>`,parts:{
+volant:{fr:"Volant",en:"Steering wheel",r:"Dirige les roues. Mains à 9 h et 3 h — meilleur contrôle et sécurité avec le coussin gonflable."},
+embrayage:{fr:"Embrayage (pédale de gauche)",en:"Clutch",r:"Transmission manuelle seulement : permet de changer les vitesses. Absente sur une automatique."},
+frein:{fr:"Frein (pédale du centre)",en:"Brake pedal",r:"Ralentit et arrête le véhicule. Toujours avec le pied droit. Freinage au seuil : ferme mais progressif."},
+accel:{fr:"Accélérateur (pédale de droite)",en:"Accelerator / Gas pedal",r:"Fait avancer le véhicule. Pied droit, pression douce et progressive."},
+levier:{fr:"Levier de vitesse",en:"Gear lever / shifter",r:"P = Park (immobilise les roues, pour stationner — engagez aussi le frein à main). R = Reverse (marche arrière). N = Neutral (aucune vitesse enclenchée, roues libres). D = Drive (conduite normale vers l'avant). S = Sport (rapports plus bas pour plus de reprise, rarement utilisé à l'examen). L = Low (rapport bas fixe, pour les fortes pentes ou pour freiner le véhicule en descente). On ne passe R ou P qu'à l'arrêt COMPLET."},
+freinmain:{fr:"Frein à main / de stationnement",en:"Parking brake / handbrake",r:"À engager à chaque stationnement, surtout en pente. À l'examen : oublié = points perdus."},
+retro:{fr:"Rétroviseur intérieur",en:"Rearview mirror",r:"Technique : assis en position de conduite normale, réglez-le pour voir toute la lunette arrière sans bouger la tête — seulement les yeux. Vérification toutes les 5 à 8 secondes en conduisant."},
+retrog:{fr:"Rétroviseur gauche",en:"Left side mirror",r:"Technique : penchez légèrement la tête vers la vitre gauche, puis réglez le miroir pour voir tout juste le bord de votre véhicule. Ne couvre PAS l'angle mort : shoulder check obligatoire."},
+retrod:{fr:"Rétroviseur droit",en:"Right side mirror",r:"Même technique que le rétroviseur gauche : penchez légèrement la tête vers le centre, réglez pour voir tout juste le bord du véhicule. Attention : « objects are closer than they appear » — les objets sont plus proches qu'ils ne paraissent."},
+ceinture:{fr:"Ceinture de sécurité",en:"Seat belt",r:"Obligatoire avant de démarrer. Le conducteur est responsable des passagers de moins de 16 ans."}}},
+{t:"Le tableau de bord",svg:`<svg viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg">
+<rect x="10" y="20" width="400" height="150" rx="18" fill="#16233B" stroke="#4C6284" stroke-width="2"/>
+<g class="part" data-p="compteur"><circle class="fillable" cx="140" cy="95" r="55" fill="#101B2D" stroke="#7E93B5" stroke-width="3"/><line x1="140" y1="95" x2="112" y2="63" stroke="#F5B301" stroke-width="4"/><text x="140" y="132" fill="#9AA7BC" font-size="12" text-anchor="middle" font-family="Inter">km/h</text><text x="106" y="95" fill="#40506B" font-size="9" font-family="Inter">0</text><text x="163" y="72" fill="#40506B" font-size="9" font-family="Inter">100</text></g>
+<g class="part" data-p="compte_tours"><circle class="fillable" cx="280" cy="95" r="55" fill="#101B2D" stroke="#7E93B5" stroke-width="3"/><line x1="280" y1="95" x2="260" y2="58" stroke="#7E93B5" stroke-width="4"/><text x="280" y="132" fill="#9AA7BC" font-size="11" text-anchor="middle" font-family="Inter">RPM ×1000</text></g>
+<g class="part" data-p="jauge"><rect class="fillable" x="355" y="60" width="18" height="70" rx="4" fill="#101B2D" stroke="#7E93B5" stroke-width="2"/><rect x="358" y="100" width="12" height="27" fill="#F5B301"/><text x="364" y="52" fill="#9AA7BC" font-size="10" text-anchor="middle" font-family="Inter">⛽</text><text x="364" y="145" fill="#40506B" font-size="9" text-anchor="middle" font-family="Inter">E → F</text></g>
+<rect x="10" y="185" width="400" height="60" rx="12" fill="#0F1B2E" stroke="#2C3E5E"/>
+<text x="210" y="180" fill="#40506B" font-size="10" text-anchor="middle" font-family="Inter">TÉMOINS LUMINEUX / WARNING LIGHTS</text>
+<g class="part" data-p="tmoteur"><circle class="fillable" cx="60" cy="215" r="16" fill="#1F3050" stroke="#E0A030" stroke-width="2"/><text x="60" y="220" fill="#E0A030" font-size="11" text-anchor="middle" font-family="Inter">⚙</text></g>
+<g class="part" data-p="thuile"><circle class="fillable" cx="135" cy="215" r="16" fill="#1F3050" stroke="#D64545" stroke-width="2"/><text x="135" y="220" fill="#D64545" font-size="11" text-anchor="middle" font-family="Inter">🛢</text></g>
+<g class="part" data-p="tbatterie"><circle class="fillable" cx="210" cy="215" r="16" fill="#1F3050" stroke="#D64545" stroke-width="2"/><text x="210" y="220" fill="#D64545" font-size="10" text-anchor="middle" font-family="Inter">-+</text></g>
+<g class="part" data-p="tfrein"><circle class="fillable" cx="285" cy="215" r="16" fill="#1F3050" stroke="#D64545" stroke-width="2"/><text x="285" y="220" fill="#D64545" font-size="10" text-anchor="middle" font-family="Inter">(!)</text></g>
+<g class="part" data-p="tabs"><circle class="fillable" cx="360" cy="215" r="16" fill="#1F3050" stroke="#E0A030" stroke-width="2"/><text x="360" y="220" fill="#E0A030" font-size="9" text-anchor="middle" font-family="Inter">ABS</text></g>
+</svg>`,parts:{
+compteur:{fr:"Indicateur de vitesse",en:"Speedometer",r:"Votre vitesse en km/h. Limites par défaut : 50 km/h en ville, 80 km/h en zone rurale non affichée."},
+compte_tours:{fr:"Compte-tours",en:"Tachometer",r:"Régime du moteur (tours/minute × 1000). Zone rouge = trop haut."},
+jauge:{fr:"Jauge d'essence",en:"Fuel gauge",r:"E = Empty (vide), F = Full (plein). La petite flèche à côté du symbole indique de quel côté est le réservoir."},
+tmoteur:{fr:"Témoin moteur",en:"Check engine light",r:"Jaune/orange : faites vérifier le moteur bientôt. S'il clignote : arrêtez-vous dès que possible."},
+thuile:{fr:"Témoin de pression d'huile",en:"Oil pressure light",r:"ROUGE = urgent : arrêtez le moteur dès que c'est sécuritaire. Rouler sans huile détruit le moteur."},
+tbatterie:{fr:"Témoin de batterie",en:"Battery / charging light",r:"Problème de charge. Le véhicule peut s'arrêter : faites vérifier rapidement."},
+tfrein:{fr:"Témoin de frein",en:"Brake warning light",r:"Frein à main engagé ou problème de freins. Vérifiez le frein à main d'abord !"},
+tabs:{fr:"Témoin ABS",en:"ABS light",r:"Système antiblocage des freins. Allumé en continu = ABS désactivé, freins ordinaires fonctionnels."}}},
+{t:"Les commandes",svg:`<svg viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg">
+<rect x="150" y="40" width="120" height="120" rx="14" fill="#16233B" stroke="#4C6284" stroke-width="2"/>
+<g class="part" data-p="klaxon"><circle class="fillable" cx="210" cy="100" r="34" fill="#1F3050" stroke="#7E93B5" stroke-width="3"/><text x="210" y="106" fill="#9AA7BC" font-size="12" text-anchor="middle" font-family="Inter">📯</text></g>
+<g class="part" data-p="clignotants"><rect class="fillable" x="52" y="86" width="98" height="18" rx="9" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="100" y="78" fill="#9AA7BC" font-size="10" text-anchor="middle" font-family="Inter">↑ droite / ↓ gauche</text><polygon points="30,95 52,86 52,104" fill="#7E93B5"/></g>
+<g class="part" data-p="essuie"><rect class="fillable" x="270" y="86" width="98" height="18" rx="9" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><polygon points="390,95 368,86 368,104" fill="#7E93B5"/><text x="320" y="78" fill="#9AA7BC" font-size="10" text-anchor="middle" font-family="Inter">OFF · INT · LO · HI</text></g>
+<g class="part" data-p="phares"><circle class="fillable" cx="70" cy="150" r="20" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="70" y="155" fill="#F5B301" font-size="12" text-anchor="middle" font-family="Inter">≡D</text><text x="70" y="185" fill="#40506B" font-size="9" text-anchor="middle" font-family="Inter">bague phares</text></g>
+<g class="part" data-p="feux_detresse"><rect class="fillable" x="192" y="182" width="36" height="26" rx="6" fill="#1F3050" stroke="#D64545" stroke-width="2"/><text x="210" y="200" fill="#D64545" font-size="13" text-anchor="middle" font-family="Inter">▲</text><text x="210" y="222" fill="#40506B" font-size="9" text-anchor="middle" font-family="Inter">feux de détresse</text></g>
+<g class="part" data-p="degivrage"><rect class="fillable" x="300" y="182" width="36" height="26" rx="6" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="318" y="200" fill="#9AA7BC" font-size="11" text-anchor="middle" font-family="Inter">♨</text><text x="318" y="222" fill="#40506B" font-size="9" text-anchor="middle" font-family="Inter">dégivrage</text></g>
+</svg>`,parts:{
+clignotants:{fr:"Manette des clignotants (à gauche)",en:"Turn signal stalk",r:"Vers le BAS = gauche, vers le HAUT = droite. À activer AVANT chaque virage et changement de voie (le S de MSB)."},
+essuie:{fr:"Manette des essuie-glaces (à droite)",en:"Wiper stalk",r:"OFF, intermittent, lent (LO), rapide (HI). Pluie = essuie-glaces ET phares allumés (c'est la loi)."},
+phares:{fr:"Commande des phares",en:"Headlight control",r:"Feux de croisement (low beams) : à moins de 60 m derrière un véhicule. Système complet allumé 30 min avant le coucher du soleil."},
+klaxon:{fr:"Klaxon (centre du volant)",en:"Horn",r:"Pour AVERTIR d'un danger — pas pour exprimer sa frustration."},
+feux_detresse:{fr:"Feux de détresse",en:"Hazard lights",r:"Le triangle rouge. En panne ou arrêt d'urgence sur l'accotement : activez-les immédiatement."},
+degivrage:{fr:"Dégivrage",en:"Defrost / defogger",r:"Pare-brise embué ou givré : visibilité obligatoire AVANT de rouler. Item vérifié dans la préparation hivernale."}}},
+{t:"Le circle check (extérieur)",svg:`<svg viewBox="0 0 420 300" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="210" cy="150" rx="185" ry="130" fill="none" stroke="#2C3E5E" stroke-width="2" stroke-dasharray="8 7"/>
+<text x="210" y="26" fill="#40506B" font-size="10" text-anchor="middle" font-family="Inter">↻ faites le tour complet du véhicule</text>
+<rect x="140" y="70" width="140" height="170" rx="34" fill="#16233B" stroke="#4C6284" stroke-width="2.5"/>
+<rect x="158" y="105" width="104" height="60" rx="10" fill="#101B2D" stroke="#2C3E5E"/>
+<g class="part" data-p="pneus"><rect class="fillable" x="126" y="88" width="16" height="34" rx="7" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><rect class="fillable" x="278" y="88" width="16" height="34" rx="7" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><rect class="fillable" x="126" y="190" width="16" height="34" rx="7" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><rect class="fillable" x="278" y="190" width="16" height="34" rx="7" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/></g>
+<g class="part" data-p="pharesav"><rect class="fillable" x="152" y="66" width="26" height="10" rx="4" fill="#F5B301" opacity="0.85"/><rect class="fillable" x="242" y="66" width="26" height="10" rx="4" fill="#F5B301" opacity="0.85"/></g>
+<g class="part" data-p="feuxar"><rect class="fillable" x="152" y="234" width="26" height="10" rx="4" fill="#D64545" opacity="0.85"/><rect class="fillable" x="242" y="234" width="26" height="10" rx="4" fill="#D64545" opacity="0.85"/></g>
+<g class="part" data-p="miroirs"><rect class="fillable" x="118" y="128" width="20" height="10" rx="4" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><rect class="fillable" x="282" y="128" width="20" height="10" rx="4" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/></g>
+<g class="part" data-p="alentours"><circle class="fillable" cx="210" cy="278" r="13" fill="#1F3050" stroke="#7E93B5" stroke-width="2"/><text x="210" y="283" fill="#9AA7BC" font-size="11" text-anchor="middle" font-family="Inter">👀</text></g>
+<text x="210" y="60" fill="#40506B" font-size="9" text-anchor="middle" font-family="Inter">AVANT</text>
+</svg>`,parts:{
+pneus:{fr:"Pneus (les 4)",en:"Tires",r:"Pression, usure, dommages. L'autocollant de pression est sur le cadre de la portière conducteur. Sous 7 °C : pneus d'hiver."},
+pharesav:{fr:"Phares avant",en:"Headlights",r:"Propres et fonctionnels. Vérifiez croisement ET route (low/high beams)."},
+feuxar:{fr:"Feux arrière et de freinage",en:"Taillights / brake lights",r:"Un feu de freinage brûlé = contravention ET danger. Demandez à quelqu'un d'appuyer sur le frein pendant que vous regardez."},
+miroirs:{fr:"Rétroviseurs extérieurs",en:"Side mirrors",r:"Présents, intacts, propres (neige/givre). Requis par le MTO — vérifiés lors de l'inspection du véhicule."},
+alentours:{fr:"Les alentours immédiats",en:"Immediate surroundings",r:"Enfants, animaux, objets, flaques d'huile sous le véhicule. Le circle check cherche les risques POTENTIELS — question de quiz !"}}}
+];
+let vhCur=0;
+function vhScene(i){
+  vhCur=i;
+  const tabs=document.getElementById('vhTabs');tabs.innerHTML='';
+  VH.forEach((s,j)=>{
+    const b=document.createElement('button');b.className='vhtab'+(j===i?' active':'');
+    b.textContent=(j+1)+'. '+s.t;b.onclick=()=>vhScene(j);tabs.appendChild(b);
+  });
+  document.getElementById('vhStage').innerHTML=VH[i].svg;
+  document.getElementById('vhInfo').innerHTML='Sélectionnez un élément du schéma ☝️';
+  document.querySelectorAll('#vhStage .part').forEach(el=>{
+    el.addEventListener('click',()=>vhSelect(el));
+  });
+  document.getElementById('vhPrev').style.visibility=i===0?'hidden':'visible';
+  document.getElementById('vhNext').textContent=i===VH.length-1?'Terminer ✓':'Suivant →';
+}
+function vhSelect(el){
+  document.querySelectorAll('#vhStage .part').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  const p=VH[vhCur].parts[el.dataset.p];
+  if(p)document.getElementById('vhInfo').innerHTML=
+    `<b class="fr">${p.fr}</b><span class="en">🇬🇧 ${p.en}</span><span class="role">${p.r}</span>`;
+}
+function vhNav(d){
+  const n=vhCur+d;
+  if(n<0)return;
+  if(n>=VH.length){show('home');refreshHome();return;}
+  vhScene(n);
+}
+
+/* Auto-login si code déjà entré */
+if(CODE_HASHES.includes(store.get('fr_code_hash')||'')){show('home');buildHome();}
+
+/* PWA : enregistrement du service worker (hors ligne) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
